@@ -24,7 +24,7 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org/
       - run: npm ci --legacy-peer-deps
-      - run: npm build
+      - run: npm run build
       - run: npm test
       - run: npm publish --provenance --access public
         env:

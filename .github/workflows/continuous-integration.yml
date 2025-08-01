@@ -24,7 +24,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
     - run: npm ci --legacy-peer-deps
-    - run: npm build
+    - run: npm run build
     - run: npm run test:coverage
 
     - name: Codecov
