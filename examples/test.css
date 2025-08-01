@@ -1,0 +1,270 @@
+/* CSS Example File - URL Detection Test Cases */
+/* This file contains various URL patterns for testing the URL detector */
+
+/* Single line comment with URLs (should be excluded by default) */
+/* MDN CSS reference: https://developer.mozilla.org/en-US/docs/Web/CSS */
+/* W3C specifications: https://w3.org/Style/CSS/ */
+/* Can I Use: https://caniuse.com/css-grid */
+
+/*
+ * Multi-line comment with URLs (should be excluded by default)
+ * CSS Tricks: https://css-tricks.com/guides/
+ * Sass documentation: https://sass-lang.com/documentation/
+ * Bootstrap: https://getbootstrap.com/docs/5.0/
+ */
+
+/* Import statements with URLs (should be included) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url("https://cdn.example.com/normalize.css");
+@import url(//cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css);
+
+/* Font face with URLs (should be included) */
+@font-face {
+    font-family: 'CustomFont';
+    src: url('https://fonts.example.com/custom-font.woff2') format('woff2'),
+         url('https://fonts.example.com/custom-font.woff') format('woff'),
+         url('//cdn.example.com/fonts/custom-font.ttf') format('truetype');
+    /* Comment in font-face: https://font-comment.example.com/ignored */
+}
+
+/* Background images with URLs (should be included) */
+.hero-section {
+    background-image: url('https://images.example.com/hero-background.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+.logo {
+    background: url("https://assets.example.com/logo.svg") no-repeat center;
+    /* Logo comment: https://logo-comment.example.com/ignored */
+}
+
+.pattern-bg {
+    background-image: url(//cdn.example.com/patterns/dots.png);
+}
+
+/* Multiple background images */
+.complex-bg {
+    background-image: 
+        url('https://overlay.example.com/texture.png'),
+        url('https://base.example.com/gradient.jpg');
+}
+
+/* Data URIs (should be included) */
+.data-uri-bg {
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAi');
+}
+
+/* File protocol URLs (should be included) */
+.local-asset {
+    background-image: url('file:///Users/designer/assets/texture.jpg');
+}
+
+.windows-asset {
+    background-image: url('file:///C:/Assets/Images/background.png');
+}
+
+/* CSS custom properties with URLs (should be included) */
+:root {
+    --primary-bg: url('https://variables.example.com/primary-bg.jpg');
+    --secondary-bg: url("https://variables.example.com/secondary-bg.png");
+    --icon-sprite: url(//variables.example.com/icons/sprite.svg);
+    /* Comment in root: https://root-comment.example.com/ignored */
+}
+
+/* Using custom properties */
+.custom-props {
+    background-image: var(--primary-bg);
+}
+
+/* Content property with URLs (should be included) */
+.pseudo-element::before {
+    content: url('https://content.example.com/icon.svg');
+}
+
+.pseudo-element::after {
+    content: url("//content.example.com/decoration.png");
+    /* Pseudo comment: https://pseudo-comment.example.com/ignored */
+}
+
+/* List style with URLs (should be included) */
+.custom-list {
+    list-style-image: url('https://list.example.com/bullet.svg');
+}
+
+/* Border image with URLs (should be included) */
+.fancy-border {
+    border-image: url('https://border.example.com/frame.png') 30 round;
+}
+
+/* Cursor with URLs (should be included) */
+.custom-cursor {
+    cursor: url('https://cursor.example.com/pointer.cur'), pointer;
+}
+
+.grab-cursor {
+    cursor: url("//cursor.example.com/grab.png") 8 8, grab;
+}
+
+/* Mask image with URLs (should be included) */
+.masked-element {
+    -webkit-mask-image: url('https://mask.example.com/shape.svg');
+    mask-image: url('https://mask.example.com/shape.svg');
+}
+
+/* Clip path with URLs (should be included) */
+.clipped-element {
+    clip-path: url('https://clip.example.com/path.svg#clip');
+}
+
+/* Filter with URLs (should be included) */
+.filtered-element {
+    filter: url('https://filter.example.com/effects.svg#blur');
+}
+
+/* Media queries with URLs in content */
+@media (max-width: 768px) {
+    /* Comment in media query: https://media-comment.example.com/ignored */
+    .mobile-bg {
+        background-image: url('https://mobile.example.com/background.jpg');
+    }
+}
+
+@media print {
+    .print-logo {
+        background: url("https://print.example.com/logo-bw.svg");
+    }
+}
+
+/* Keyframes with URLs (should be included) */
+@keyframes slide-bg {
+    0% {
+        background-image: url('https://animation.example.com/frame1.jpg');
+    }
+    50% {
+        background-image: url('https://animation.example.com/frame2.jpg');
+        /* Animation comment: https://animation-comment.example.com/ignored */
+    }
+    100% {
+        background-image: url('https://animation.example.com/frame3.jpg');
+    }
+}
+
+/* CSS functions with URLs */
+.function-urls {
+    /* Image function */
+    background-image: image(url('https://function.example.com/modern.avif'), 
+                           url('https://function.example.com/fallback.jpg'));
+    
+    /* Cross-fade function */
+    background-image: cross-fade(url('https://crossfade.example.com/img1.jpg') 50%, 
+                                url('https://crossfade.example.com/img2.jpg') 50%);
+}
+
+/* Supports query with URLs */
+@supports (background-image: url('test.webp')) {
+    .webp-support {
+        background-image: url('https://supports.example.com/image.webp');
+    }
+}
+
+/* CSS Grid with named areas and background URLs */
+.grid-container {
+    display: grid;
+    grid-template-areas: "header header" "sidebar main";
+    background: url('https://grid.example.com/grid-bg.png');
+}
+
+.grid-header {
+    grid-area: header;
+    background: url("//grid.example.com/header-pattern.svg");
+}
+
+/* Complex selectors with URLs */
+.card[data-bg="custom"] {
+    background-image: url('https://attribute.example.com/custom-bg.jpg');
+}
+
+.gallery img:hover {
+    content: url('https://hover.example.com/zoom-icon.svg');
+}
+
+/* Nested rules (if using CSS nesting) */
+.component {
+    background: url('https://nested.example.com/component-bg.jpg');
+    
+    /* Comment in nesting: https://nesting-comment.example.com/ignored */
+    
+    &:hover {
+        background-image: url('https://nested.example.com/hover-bg.jpg');
+    }
+    
+    .child {
+        background: url("//nested.example.com/child-bg.png");
+    }
+}
+
+/* Various protocols in CSS */
+.protocol-examples {
+    /* HTTPS */
+    background: url('https://secure.css.example.com/secure-bg.jpg');
+    
+    /* HTTP */  
+    background: url('http://insecure.css.example.com/plain-bg.jpg');
+    
+    /* Protocol-relative */
+    background: url('//protocol-relative.css.example.com/adaptive-bg.png');
+    
+    /* File protocol */
+    background: url('file:///home/css/local-bg.svg');
+    
+    /* Data URL */
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==');
+}
+
+/* URL with query parameters and fragments */
+.query-urls {
+    background: url('https://query.example.com/image.php?size=large&format=webp&quality=80');
+    mask-image: url('https://fragment.example.com/masks.svg#circle');
+}
+
+/* URLs with authentication */
+.auth-urls {
+    background: url('https://user:password@private.example.com/secure-image.jpg');
+}
+
+/* Container queries with URLs (modern CSS) */
+@container sidebar (min-width: 300px) {
+    .container-item {
+        background: url('https://container.example.com/wide-bg.jpg');
+        /* Container comment: https://container-comment.example.com/ignored */
+    }
+}
+
+/*
+ * Large commented block with URLs (should be excluded by default)
+ * This section contains multiple URLs that should not be detected:
+ * - Design system: https://commented.css.example.com/design-system
+ * - Icon library: http://icons.commented.css.example.com/library
+ * - Pattern library: //patterns.commented.css.example.com/components  
+ * - Local assets: file:///Assets/commented-styles/
+ */
+
+/* Block comment immediately before URL usage (edge case testing) */
+/* https://css-block-before.example.com/ignored */ .immediate-url { background: url('https://css-immediate.example.com/after-comment'); }
+/* Comment */ .block-before-var { background-image: url("https://css-block-before-var.example.com"); }
+
+/* Multi
+ * line comment
+ * with https://css-multiline-block.example.com/ignored
+ */
+.multiline-block {
+    background: url('https://css-after-multiline.example.com');
+}
+
+/* Property with block comment */
+.property-comment {
+    /* https://css-property-comment.example.com/ignored */ background: url('https://css-property-url.example.com');
+}
+
+/* End of file comment: https://end-css.example.com/final */

@@ -1,0 +1,237 @@
+# YAML Example File - URL Detection Test Cases
+# This file contains various URL patterns for testing the URL detector
+
+# Comment with URL (should be excluded by default): https://yaml-comment.example.com/ignored
+
+# Basic API configuration
+api:
+  base_url: "https://api.yaml.example.com/v1"
+  staging_url: "https://staging-api.yaml.example.com"
+  development_url: "http://localhost:4000/api"
+  cdn_url: "//cdn.yaml.example.com/assets"
+  websocket_url: "wss://ws.yaml.example.com/socket"
+
+# Endpoints configuration
+endpoints:
+  users: "https://api.yaml.example.com/users"
+  posts: "https://api.yaml.example.com/posts"
+  comments: "https://api.yaml.example.com/comments"
+  media: "//media.yaml.example.com/files"
+  uploads: "https://uploads.yaml.example.com/files"
+
+# Protocol variations
+protocols:
+  https: "https://secure.yaml.example.com/"
+  http: "http://insecure.yaml.example.com/"
+  ftp: "ftp://files.yaml.example.com/"
+  sftp: "sftp://secure-files.yaml.example.com/"
+  file: "file:///var/app/config.yaml"
+  websocket: "wss://websocket.yaml.example.com/chat"
+
+# Complex URL scenarios
+complex_urls:
+  with_auth: "https://user:pass@auth.yaml.example.com/secure"
+  with_query: "https://search.yaml.example.com?q=yaml&page=1&sort=date"
+  with_fragment: "https://docs.yaml.example.com/guide#section-7"
+  with_port: "https://api.yaml.example.com:9443/secure-endpoint"
+  long_path: "https://api.yaml.example.com/very/long/path/to/resource/with/parameters"
+  encoded_chars: "https://api.yaml.example.com/search?q=hello%20world&type=yaml"
+
+# Environment-specific configurations
+environments:
+  production:
+    # Production comment: https://prod-comment.yaml.example.com/ignored
+    api_url: "https://prod.yaml.example.com/api"
+    cdn_url: "//prod-cdn.yaml.example.com/assets"
+    monitoring_url: "https://monitoring.prod.yaml.example.com/dashboard"
+    
+  staging:
+    # Staging comment: https://staging-comment.yaml.example.com/ignored  
+    api_url: "https://staging.yaml.example.com/api"
+    cdn_url: "//staging-cdn.yaml.example.com/assets"
+    monitoring_url: "https://monitoring.staging.yaml.example.com/dashboard"
+    
+  development:
+    # Development comment: https://dev-comment.yaml.example.com/ignored
+    api_url: "http://dev.yaml.example.com:8080/api"
+    cdn_url: "//dev-cdn.yaml.example.com/assets"
+    monitoring_url: "http://monitoring.dev.yaml.example.com:3000/dashboard"
+
+# Services configuration
+services:
+  authentication:
+    login_url: "https://auth.yaml.example.com/login"
+    logout_url: "https://auth.yaml.example.com/logout"
+    register_url: "https://auth.yaml.example.com/register"
+    forgot_password_url: "https://auth.yaml.example.com/forgot-password"
+    
+  payment:
+    gateway_url: "https://payment.yaml.example.com/gateway"
+    webhook_url: "https://payment.yaml.example.com/webhook"
+    success_url: "https://payment.yaml.example.com/success"
+    cancel_url: "https://payment.yaml.example.com/cancel"
+    
+  notification:
+    email_api: "https://email.yaml.example.com/send"
+    sms_api: "https://sms.yaml.example.com/send"
+    push_api: "https://push.yaml.example.com/send"
+
+# External integrations
+external_integrations:
+  github: "https://api.github.com/repos/user/repo"
+  slack: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+  stripe: "https://api.stripe.com/v1/charges"
+  sendgrid: "https://api.sendgrid.com/v3/mail/send"
+  aws_s3: "https://s3.amazonaws.com/bucket-name/"
+  google_analytics: "https://www.google-analytics.com/collect"
+
+# File upload configuration
+file_uploads:
+  images: "https://uploads.yaml.example.com/images"
+  documents: "https://uploads.yaml.example.com/documents"
+  videos: "https://uploads.yaml.example.com/videos"
+  temp_storage: "file:///tmp/uploads"
+
+# Database configuration
+database:
+  primary: "postgresql://user:pass@db.yaml.example.com:5432/main"
+  replica: "postgresql://user:pass@replica.yaml.example.com:5432/main"
+  cache: "redis://cache.yaml.example.com:6379/0"
+  backup_location: "file:///var/backups/database"
+
+# Monitoring configuration
+monitoring:
+  metrics: "https://metrics.yaml.example.com/api"
+  logs: "https://logs.yaml.example.com/api"
+  alerts: "https://alerts.yaml.example.com/webhook"
+  health_check: "https://health.yaml.example.com/status"
+
+# Content delivery network
+content_delivery:
+  images: "//images.yaml.example.com/"
+  css: "//css.yaml.example.com/"
+  js: "//js.yaml.example.com/"
+  fonts: "//fonts.yaml.example.com/"
+
+# API documentation
+api_documentation:
+  swagger: "https://docs.yaml.example.com/swagger"
+  postman: "https://docs.yaml.example.com/postman"
+  openapi: "https://docs.yaml.example.com/openapi.yaml"
+
+# Webhook endpoints (array format)
+webhook_endpoints:
+  - "https://webhook.yaml.example.com/github"
+  - "https://webhook.yaml.example.com/stripe"
+  - "https://webhook.yaml.example.com/sendgrid"
+  - "https://webhook.yaml.example.com/slack"
+
+# Redirect URLs (array format)
+redirect_urls:
+  - "https://redirect.yaml.example.com/success"
+  - "https://redirect.yaml.example.com/error"
+  - "https://redirect.yaml.example.com/cancel"
+
+# CORS origins (array format)
+cors_origins:
+  - "https://app.yaml.example.com"
+  - "https://admin.yaml.example.com"
+  - "http://localhost:3000"
+  - "//cdn.yaml.example.com"
+
+# Feature flags
+feature_flags:
+  new_api:
+    enabled: true
+    config_url: "https://config.yaml.example.com/new-api"
+  beta_features:
+    enabled: false
+    docs_url: "https://docs.yaml.example.com/beta"
+
+# Social media links
+social_links:
+  twitter: "https://twitter.com/yamlexample"
+  facebook: "https://facebook.com/yamlexample"
+  linkedin: "https://linkedin.com/company/yamlexample"
+  github: "https://github.com/yamlexample"
+
+# Legal pages
+legal:
+  privacy_policy: "https://legal.yaml.example.com/privacy"
+  terms_of_service: "https://legal.yaml.example.com/terms"
+  cookie_policy: "https://legal.yaml.example.com/cookies"
+
+# Support configuration
+support:
+  help_center: "https://help.yaml.example.com/"
+  contact_form: "https://help.yaml.example.com/contact"
+  live_chat: "wss://chat.yaml.example.com/support"
+
+# Nested complex example
+nested_complex_example:
+  level1:
+    level2:
+      level3:
+        deep_api_url: "https://deep.yaml.example.com/api/v1/nested"
+        deep_cdn_url: "//deep-cdn.yaml.example.com/nested/assets"
+
+# Array of objects with URLs
+array_of_objects_with_urls:
+  - name: "service1"
+    url: "https://service1.yaml.example.com/api"
+    health_check: "https://service1.yaml.example.com/health"
+  - name: "service2"
+    url: "https://service2.yaml.example.com/api" 
+    health_check: "https://service2.yaml.example.com/health"
+  - name: "service3"
+    url: "http://service3.yaml.example.com:8080/api"
+    health_check: "http://service3.yaml.example.com:8080/health"
+
+# Special characters in URLs
+special_characters:
+  url_with_spaces: "https://api.yaml.example.com/search?q=hello%20world"
+  url_with_special_chars: "https://api.yaml.example.com/path?param=value&other=test%26data"
+  url_with_unicode: "https://api.yaml.example.com/unicode?name=José"
+
+# Multi-line strings with URLs
+multi_line_string: |
+  This is a multi-line string that contains URLs:
+  - API endpoint: https://multiline.yaml.example.com/api
+  - Documentation: https://multiline-docs.yaml.example.com/guide
+  - Support: https://multiline-support.yaml.example.com/help
+
+# Folded string with URLs
+folded_string: >
+  This is a folded string with URLs
+  https://folded.yaml.example.com/api and
+  https://folded-docs.yaml.example.com/guide
+  are both valid endpoints.
+
+# Literal string with URLs
+literal_string: |
+  #!/bin/bash
+  # Script with URLs
+  API_URL="https://literal.yaml.example.com/api"
+  curl -X GET "$API_URL/status"
+
+# YAML anchors and references
+defaults: &defaults
+  api_base: "https://anchor.yaml.example.com/api"
+  cdn_base: "//anchor-cdn.yaml.example.com/assets"
+
+# Using anchors
+prod_config:
+  <<: *defaults
+  environment: "production"
+  
+staging_config:
+  <<: *defaults
+  environment: "staging"
+  api_base: "https://staging-anchor.yaml.example.com/api"
+
+# Comments with URLs throughout the file
+# Kubernetes config: https://k8s-comment.yaml.example.com/ignored
+# Docker registry: https://registry-comment.yaml.example.com/ignored
+# CI/CD pipeline: https://cicd-comment.yaml.example.com/ignored
+
+# End of file comment: https://end-yaml.example.com/final

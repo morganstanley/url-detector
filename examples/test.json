@@ -1,0 +1,182 @@
+{
+  "_comment": "JSON Example File - URL Detection Test Cases",
+  "_note": "This file contains various URL patterns for testing the URL detector",
+  "_documentation": "https://json-doc.example.com/ignored-comment",
+  "api": {
+    "base_url": "https://api.json.example.com/v1",
+    "staging_url": "https://staging-api.json.example.com",
+    "development_url": "http://localhost:3000/api",
+    "cdn_url": "//cdn.json.example.com/assets",
+    "websocket_url": "wss://ws.json.example.com/socket"
+  },
+  "endpoints": {
+    "users": "https://api.json.example.com/users",
+    "posts": "https://api.json.example.com/posts",
+    "comments": "https://api.json.example.com/comments",
+    "media": "//media.json.example.com/files"
+  },
+  "protocols": {
+    "https": "https://secure.json.example.com/",
+    "http": "http://insecure.json.example.com/",
+    "ftp": "ftp://files.json.example.com/",
+    "sftp": "sftp://secure-files.json.example.com/",
+    "file": "file:///var/app/config.json",
+    "websocket": "wss://websocket.json.example.com/chat"
+  },
+  "complex_urls": {
+    "with_auth": "https://user:pass@auth.json.example.com/secure",
+    "with_query": "https://search.json.example.com?q=json&page=1&sort=date",
+    "with_fragment": "https://docs.json.example.com/guide#section-6",
+    "with_port": "https://api.json.example.com:9443/secure-endpoint",
+    "long_path": "https://api.json.example.com/very/long/path/to/resource/with/parameters",
+    "encoded_chars": "https://api.json.example.com/search?q=hello%20world&type=json"
+  },
+  "environments": {
+    "production": {
+      "api_url": "https://prod.json.example.com/api",
+      "cdn_url": "//prod-cdn.json.example.com/assets",
+      "monitoring_url": "https://monitoring.prod.json.example.com/dashboard"
+    },
+    "staging": {
+      "api_url": "https://staging.json.example.com/api",
+      "cdn_url": "//staging-cdn.json.example.com/assets",
+      "monitoring_url": "https://monitoring.staging.json.example.com/dashboard"
+    },
+    "development": {
+      "api_url": "http://dev.json.example.com:8080/api",
+      "cdn_url": "//dev-cdn.json.example.com/assets",
+      "monitoring_url": "http://monitoring.dev.json.example.com:3000/dashboard"
+    }
+  },
+  "services": {
+    "authentication": {
+      "login_url": "https://auth.json.example.com/login",
+      "logout_url": "https://auth.json.example.com/logout",
+      "register_url": "https://auth.json.example.com/register",
+      "forgot_password_url": "https://auth.json.example.com/forgot-password"
+    },
+    "payment": {
+      "gateway_url": "https://payment.json.example.com/gateway",
+      "webhook_url": "https://payment.json.example.com/webhook",
+      "success_url": "https://payment.json.example.com/success",
+      "cancel_url": "https://payment.json.example.com/cancel"
+    },
+    "notification": {
+      "email_api": "https://email.json.example.com/send",
+      "sms_api": "https://sms.json.example.com/send",
+      "push_api": "https://push.json.example.com/send"
+    }
+  },
+  "external_integrations": {
+    "github": "https://api.github.com/repos/user/repo",
+    "slack": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+    "stripe": "https://api.stripe.com/v1/charges",
+    "sendgrid": "https://api.sendgrid.com/v3/mail/send",
+    "aws_s3": "https://s3.amazonaws.com/bucket-name/",
+    "google_analytics": "https://www.google-analytics.com/collect"
+  },
+  "file_uploads": {
+    "images": "https://uploads.json.example.com/images",
+    "documents": "https://uploads.json.example.com/documents",
+    "videos": "https://uploads.json.example.com/videos",
+    "temp_storage": "file:///tmp/uploads"
+  },
+  "database": {
+    "primary": "postgresql://user:pass@db.json.example.com:5432/main",
+    "replica": "postgresql://user:pass@replica.json.example.com:5432/main",
+    "cache": "redis://cache.json.example.com:6379/0",
+    "backup_location": "file:///var/backups/database"
+  },
+  "monitoring": {
+    "metrics": "https://metrics.json.example.com/api",
+    "logs": "https://logs.json.example.com/api",
+    "alerts": "https://alerts.json.example.com/webhook",
+    "health_check": "https://health.json.example.com/status"
+  },
+  "content_delivery": {
+    "images": "//images.json.example.com/",
+    "css": "//css.json.example.com/",
+    "js": "//js.json.example.com/",
+    "fonts": "//fonts.json.example.com/"
+  },
+  "api_documentation": {
+    "swagger": "https://docs.json.example.com/swagger",
+    "postman": "https://docs.json.example.com/postman",
+    "openapi": "https://docs.json.example.com/openapi.json"
+  },
+  "webhook_endpoints": [
+    "https://webhook.json.example.com/github",
+    "https://webhook.json.example.com/stripe",
+    "https://webhook.json.example.com/sendgrid",
+    "https://webhook.json.example.com/slack"
+  ],
+  "redirect_urls": [
+    "https://redirect.json.example.com/success",
+    "https://redirect.json.example.com/error",
+    "https://redirect.json.example.com/cancel"
+  ],
+  "cors_origins": [
+    "https://app.json.example.com",
+    "https://admin.json.example.com",
+    "http://localhost:3000",
+    "//cdn.json.example.com"
+  ],
+  "feature_flags": {
+    "new_api": {
+      "enabled": true,
+      "config_url": "https://config.json.example.com/new-api"
+    },
+    "beta_features": {
+      "enabled": false,
+      "docs_url": "https://docs.json.example.com/beta"
+    }
+  },
+  "social_links": {
+    "twitter": "https://twitter.com/jsonexample",
+    "facebook": "https://facebook.com/jsonexample",
+    "linkedin": "https://linkedin.com/company/jsonexample",
+    "github": "https://github.com/jsonexample"
+  },
+  "legal": {
+    "privacy_policy": "https://legal.json.example.com/privacy",
+    "terms_of_service": "https://legal.json.example.com/terms",
+    "cookie_policy": "https://legal.json.example.com/cookies"
+  },
+  "support": {
+    "help_center": "https://help.json.example.com/",
+    "contact_form": "https://help.json.example.com/contact",
+    "live_chat": "wss://chat.json.example.com/support"
+  },
+  "nested_complex_example": {
+    "level1": {
+      "level2": {
+        "level3": {
+          "deep_api_url": "https://deep.json.example.com/api/v1/nested",
+          "deep_cdn_url": "//deep-cdn.json.example.com/nested/assets"
+        }
+      }
+    }
+  },
+  "array_of_objects_with_urls": [
+    {
+      "name": "service1",
+      "url": "https://service1.json.example.com/api",
+      "health_check": "https://service1.json.example.com/health"
+    },
+    {
+      "name": "service2", 
+      "url": "https://service2.json.example.com/api",
+      "health_check": "https://service2.json.example.com/health"
+    },
+    {
+      "name": "service3",
+      "url": "http://service3.json.example.com:8080/api",
+      "health_check": "http://service3.json.example.com:8080/health"
+    }
+  ],
+  "special_characters": {
+    "url_with_spaces": "https://api.json.example.com/search?q=hello%20world",
+    "url_with_special_chars": "https://api.json.example.com/path?param=value&other=test%26data",
+    "url_with_unicode": "https://api.json.example.com/unicode?name=José"
+  }
+}

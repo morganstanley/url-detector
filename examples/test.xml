@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XML Example File - URL Detection Test Cases -->
+<!-- This file contains various URL patterns for testing the URL detector -->
+<!-- Comment with URL (should be excluded by default): https://xml-comment.example.com/ignored -->
+
+<configuration>
+  <!-- API configuration section -->
+  <!-- API docs: https://api-docs-comment.xml.example.com/ignored -->
+  <api>
+    <baseUrl>https://api.xml.example.com/v1</baseUrl>
+    <stagingUrl>https://staging-api.xml.example.com</stagingUrl>
+    <developmentUrl>http://localhost:6000/api</developmentUrl>
+    <cdnUrl>//cdn.xml.example.com/assets</cdnUrl>
+    <websocketUrl>wss://ws.xml.example.com/socket</websocketUrl>
+  </api>
+  
+  <!-- Endpoints configuration -->
+  <endpoints>
+    <users>https://api.xml.example.com/users</users>
+    <posts>https://api.xml.example.com/posts</posts>
+    <comments>https://api.xml.example.com/comments</comments>
+    <media>//media.xml.example.com/files</media>
+    <uploads>https://uploads.xml.example.com/files</uploads>
+  </endpoints>
+  
+  <!-- Protocol variations -->
+  <protocols>
+    <https>https://secure.xml.example.com/</https>
+    <http>http://insecure.xml.example.com/</http>
+    <ftp>ftp://files.xml.example.com/</ftp>
+    <sftp>sftp://secure-files.xml.example.com/</sftp>
+    <file>file:///var/app/config.xml</file>
+    <websocket>wss://websocket.xml.example.com/chat</websocket>
+  </protocols>
+  
+  <!-- Complex URL scenarios -->
+  <complexUrls>
+    <withAuth>https://user:pass@auth.xml.example.com/secure</withAuth>
+    <withQuery>https://search.xml.example.com?q=xml&amp;page=1&amp;sort=date</withQuery>
+    <withFragment>https://docs.xml.example.com/guide#section-9</withFragment>
+    <withPort>https://api.xml.example.com:9443/secure-endpoint</withPort>
+    <longPath>https://api.xml.example.com/very/long/path/to/resource/with/parameters</longPath>
+    <encodedChars>https://api.xml.example.com/search?q=hello%20world&amp;type=xml</encodedChars>
+  </complexUrls>
+  
+  <!-- Environment-specific configurations -->
+  <environments>
+    <production>
+      <!-- Production comment: https://prod-comment.xml.example.com/ignored -->
+      <apiUrl>https://prod.xml.example.com/api</apiUrl>
+      <cdnUrl>//prod-cdn.xml.example.com/assets</cdnUrl>
+      <monitoringUrl>https://monitoring.prod.xml.example.com/dashboard</monitoringUrl>
+    </production>
+    
+    <staging>
+      <!-- Staging comment: https://staging-comment.xml.example.com/ignored -->
+      <apiUrl>https://staging.xml.example.com/api</apiUrl>
+      <cdnUrl>//staging-cdn.xml.example.com/assets</cdnUrl>
+      <monitoringUrl>https://monitoring.staging.xml.example.com/dashboard</monitoringUrl>
+    </staging>
+    
+    <development>
+      <!-- Development comment: https://dev-comment.xml.example.com/ignored -->
+      <apiUrl>http://dev.xml.example.com:8080/api</apiUrl>
+      <cdnUrl>//dev-cdn.xml.example.com/assets</cdnUrl>
+      <monitoringUrl>http://monitoring.dev.xml.example.com:3000/dashboard</monitoringUrl>
+    </development>
+  </environments>
+  
+  <!-- Services configuration -->
+  <services>
+    <authentication>
+      <loginUrl>https://auth.xml.example.com/login</loginUrl>
+      <logoutUrl>https://auth.xml.example.com/logout</logoutUrl>
+      <registerUrl>https://auth.xml.example.com/register</registerUrl>
+      <forgotPasswordUrl>https://auth.xml.example.com/forgot-password</forgotPasswordUrl>
+    </authentication>
+    
+    <payment>
+      <gatewayUrl>https://payment.xml.example.com/gateway</gatewayUrl>
+      <webhookUrl>https://payment.xml.example.com/webhook</webhookUrl>
+      <successUrl>https://payment.xml.example.com/success</successUrl>
+      <cancelUrl>https://payment.xml.example.com/cancel</cancelUrl>
+    </payment>
+    
+    <notification>
+      <emailApi>https://email.xml.example.com/send</emailApi>
+      <smsApi>https://sms.xml.example.com/send</smsApi>
+      <pushApi>https://push.xml.example.com/send</pushApi>
+    </notification>
+  </services>
+  
+  <!-- External integrations -->
+  <externalIntegrations>
+    <github>https://api.github.com/repos/user/repo</github>
+    <slack>https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX</slack>
+    <stripe>https://api.stripe.com/v1/charges</stripe>
+    <sendgrid>https://api.sendgrid.com/v3/mail/send</sendgrid>
+    <awsS3>https://s3.amazonaws.com/bucket-name/</awsS3>
+    <googleAnalytics>https://www.google-analytics.com/collect</googleAnalytics>
+  </externalIntegrations>
+  
+  <!-- File upload configuration -->
+  <fileUploads>
+    <images>https://uploads.xml.example.com/images</images>
+    <documents>https://uploads.xml.example.com/documents</documents>
+    <videos>https://uploads.xml.example.com/videos</videos>
+    <tempStorage>file:///tmp/uploads</tempStorage>
+  </fileUploads>
+  
+  <!-- Database configuration -->
+  <database>
+    <primary>postgresql://user:pass@db.xml.example.com:5432/main</primary>
+    <replica>postgresql://user:pass@replica.xml.example.com:5432/main</replica>
+    <cache>redis://cache.xml.example.com:6379/0</cache>
+    <backupLocation>file:///var/backups/database</backupLocation>
+  </database>
+  
+  <!-- Monitoring configuration -->
+  <monitoring>
+    <metrics>https://metrics.xml.example.com/api</metrics>
+    <logs>https://logs.xml.example.com/api</logs>
+    <alerts>https://alerts.xml.example.com/webhook</alerts>
+    <healthCheck>https://health.xml.example.com/status</healthCheck>
+  </monitoring>
+  
+  <!-- Content delivery network -->
+  <contentDelivery>
+    <images>//images.xml.example.com/</images>
+    <css>//css.xml.example.com/</css>
+    <js>//js.xml.example.com/</js>
+    <fonts>//fonts.xml.example.com/</fonts>
+  </contentDelivery>
+  
+  <!-- API documentation -->
+  <apiDocumentation>
+    <swagger>https://docs.xml.example.com/swagger</swagger>
+    <postman>https://docs.xml.example.com/postman</postman>
+    <openapi>https://docs.xml.example.com/openapi.xml</openapi>
+  </apiDocumentation>
+  
+  <!-- Webhook endpoints -->
+  <webhookEndpoints>
+    <endpoint>https://webhook.xml.example.com/github</endpoint>
+    <endpoint>https://webhook.xml.example.com/stripe</endpoint>
+    <endpoint>https://webhook.xml.example.com/sendgrid</endpoint>
+    <endpoint>https://webhook.xml.example.com/slack</endpoint>
+  </webhookEndpoints>
+  
+  <!-- Redirect URLs -->
+  <redirectUrls>
+    <url>https://redirect.xml.example.com/success</url>
+    <url>https://redirect.xml.example.com/error</url>
+    <url>https://redirect.xml.example.com/cancel</url>
+  </redirectUrls>
+  
+  <!-- CORS origins -->
+  <corsOrigins>
+    <origin>https://app.xml.example.com</origin>
+    <origin>https://admin.xml.example.com</origin>
+    <origin>http://localhost:3000</origin>
+    <origin>//cdn.xml.example.com</origin>
+  </corsOrigins>
+  
+  <!-- Feature flags -->
+  <featureFlags>
+    <newApi enabled="true">
+      <configUrl>https://config.xml.example.com/new-api</configUrl>
+    </newApi>
+    <betaFeatures enabled="false">
+      <docsUrl>https://docs.xml.example.com/beta</docsUrl>
+    </betaFeatures>
+  </featureFlags>
+  
+  <!-- Social media links -->
+  <socialLinks>
+    <twitter>https://twitter.com/xmlexample</twitter>
+    <facebook>https://facebook.com/xmlexample</facebook>
+    <linkedin>https://linkedin.com/company/xmlexample</linkedin>
+    <github>https://github.com/xmlexample</github>
+  </socialLinks>
+  
+  <!-- Legal pages -->
+  <legal>
+    <privacyPolicy>https://legal.xml.example.com/privacy</privacyPolicy>
+    <termsOfService>https://legal.xml.example.com/terms</termsOfService>
+    <cookiePolicy>https://legal.xml.example.com/cookies</cookiePolicy>
+  </legal>
+  
+  <!-- Support configuration -->
+  <support>
+    <helpCenter>https://help.xml.example.com/</helpCenter>
+    <contactForm>https://help.xml.example.com/contact</contactForm>
+    <liveChat>wss://chat.xml.example.com/support</liveChat>
+  </support>
+  
+  <!-- Nested complex example -->
+  <nestedComplexExample>
+    <level1>
+      <level2>
+        <level3>
+          <deepApiUrl>https://deep.xml.example.com/api/v1/nested</deepApiUrl>
+          <deepCdnUrl>//deep-cdn.xml.example.com/nested/assets</deepCdnUrl>
+        </level3>
+      </level2>
+    </level1>
+  </nestedComplexExample>
+  
+  <!-- Array of objects with URLs -->
+  <arrayOfObjectsWithUrls>
+    <service name="service1">
+      <url>https://service1.xml.example.com/api</url>
+      <healthCheck>https://service1.xml.example.com/health</healthCheck>
+    </service>
+    <service name="service2">
+      <url>https://service2.xml.example.com/api</url>
+      <healthCheck>https://service2.xml.example.com/health</healthCheck>
+    </service>
+    <service name="service3">
+      <url>http://service3.xml.example.com:8080/api</url>
+      <healthCheck>http://service3.xml.example.com:8080/health</healthCheck>
+    </service>
+  </arrayOfObjectsWithUrls>
+  
+  <!-- Special characters in URLs -->
+  <specialCharacters>
+    <urlWithSpaces>https://api.xml.example.com/search?q=hello%20world</urlWithSpaces>
+    <urlWithSpecialChars>https://api.xml.example.com/path?param=value&amp;other=test%26data</urlWithSpecialChars>
+    <urlWithUnicode>https://api.xml.example.com/unicode?name=José</urlWithUnicode>
+  </specialCharacters>
+  
+  <!-- XML attributes with URLs -->
+  <attributeExamples 
+    apiUrl="https://attribute.xml.example.com/api"
+    cdnUrl="//attribute-cdn.xml.example.com/assets"
+    webhookUrl="https://attribute-webhook.xml.example.com/hooks">
+    <nested baseUrl="https://nested-attribute.xml.example.com/base" />
+  </attributeExamples>
+  
+  <!-- CDATA sections with URLs -->
+  <cdataExample>
+    <![CDATA[
+    This is a CDATA section with URLs:
+    - API endpoint: https://cdata.xml.example.com/api
+    - Documentation: https://cdata-docs.xml.example.com/guide
+    - Support: https://cdata-support.xml.example.com/help
+    ]]>
+  </cdataExample>
+  
+  <!-- XML namespaces with URLs -->
+  <namespacedElement xmlns:api="https://namespace.xml.example.com/api" 
+                     xmlns:cdn="//namespace-cdn.xml.example.com/assets">
+    <api:endpoint>https://namespaced-api.xml.example.com/v1</api:endpoint>
+    <cdn:resource>//namespaced-cdn.xml.example.com/images</cdn:resource>
+  </namespacedElement>
+  
+  <!-- Build and deployment configuration -->
+  <build>
+    <!-- Build comment: https://build-comment.xml.example.com/ignored -->
+    <outputDir>dist</outputDir>
+    <publicUrl>https://build.xml.example.com/</publicUrl>
+    <apiProxy>https://build-api.xml.example.com/api</apiProxy>
+  </build>
+  
+  <deployment>
+    <production>
+      <!-- Deployment comment: https://deploy-comment.xml.example.com/ignored -->
+      <host>https://deploy-prod.xml.example.com</host>
+      <apiUrl>https://deploy-api-prod.xml.example.com/v1</apiUrl>
+    </production>
+    <staging>
+      <host>https://deploy-staging.xml.example.com</host>
+      <apiUrl>https://deploy-api-staging.xml.example.com/v1</apiUrl>
+    </staging>
+  </deployment>
+  
+  <!-- Server configuration -->
+  <server>
+    <listenAddress>0.0.0.0:8080</listenAddress>
+    <baseUrl>https://server.xml.example.com</baseUrl>
+    <staticUrl>//static.xml.example.com/assets</staticUrl>
+    <uploadUrl>https://uploads.xml.example.com/files</uploadUrl>
+  </server>
+</configuration>
+
+<!-- 
+Large commented block with URLs (should be excluded by default)
+This entire section contains multiple URLs that should not be detected:
+- API server: https://block-comment.xml.example.com/api
+- Documentation: http://block-docs.xml.example.com/guide
+- Repository: https://github.block.xml.example.com/project
+- Config file: file:///etc/xml/block-config.xml
+-->
+
+<!-- Block comment immediately before element (edge case testing) -->
+<!-- https://xml-block-before.example.com/ignored -->
+<immediateUrl>https://xml-immediate.example.com/after-comment</immediateUrl>
+<!-- Comment -->
+<blockBeforeVar>https://xml-block-before-var.example.com</blockBeforeVar>
+
+<!--
+Multi-line comment
+with https://xml-multiline-block.example.com/ignored
+-->
+<multilineBlock>https://xml-after-multiline.example.com</multilineBlock>
+
+<!-- End of file comment: https://end-xml.example.com/final -->

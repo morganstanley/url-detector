@@ -1,0 +1,271 @@
+# TOML Example File - URL Detection Test Cases
+# This file contains various URL patterns for testing the URL detector
+
+# Comment with URL (should be excluded by default): https://toml-comment.example.com/ignored
+
+# Basic API configuration
+[api]
+base_url = "https://api.toml.example.com/v1"
+staging_url = "https://staging-api.toml.example.com"
+development_url = "http://localhost:5000/api"
+cdn_url = "//cdn.toml.example.com/assets"
+websocket_url = "wss://ws.toml.example.com/socket"
+
+# Endpoints configuration
+[endpoints]
+users = "https://api.toml.example.com/users"
+posts = "https://api.toml.example.com/posts"
+comments = "https://api.toml.example.com/comments"
+media = "//media.toml.example.com/files"
+uploads = "https://uploads.toml.example.com/files"
+
+# Protocol variations
+[protocols]
+https = "https://secure.toml.example.com/"
+http = "http://insecure.toml.example.com/"
+ftp = "ftp://files.toml.example.com/"
+sftp = "sftp://secure-files.toml.example.com/"
+file = "file:///var/app/config.toml"
+websocket = "wss://websocket.toml.example.com/chat"
+
+# Complex URL scenarios
+[complex_urls]
+with_auth = "https://user:pass@auth.toml.example.com/secure"
+with_query = "https://search.toml.example.com?q=toml&page=1&sort=date"
+with_fragment = "https://docs.toml.example.com/guide#section-8"
+with_port = "https://api.toml.example.com:9443/secure-endpoint"
+long_path = "https://api.toml.example.com/very/long/path/to/resource/with/parameters"
+encoded_chars = "https://api.toml.example.com/search?q=hello%20world&type=toml"
+
+# Environment-specific configurations
+[environments.production]
+# Production comment: https://prod-comment.toml.example.com/ignored
+api_url = "https://prod.toml.example.com/api"
+cdn_url = "//prod-cdn.toml.example.com/assets"
+monitoring_url = "https://monitoring.prod.toml.example.com/dashboard"
+
+[environments.staging]
+# Staging comment: https://staging-comment.toml.example.com/ignored
+api_url = "https://staging.toml.example.com/api"
+cdn_url = "//staging-cdn.toml.example.com/assets"
+monitoring_url = "https://monitoring.staging.toml.example.com/dashboard"
+
+[environments.development]
+# Development comment: https://dev-comment.toml.example.com/ignored
+api_url = "http://dev.toml.example.com:8080/api"
+cdn_url = "//dev-cdn.toml.example.com/assets"
+monitoring_url = "http://monitoring.dev.toml.example.com:3000/dashboard"
+
+# Services configuration
+[services.authentication]
+login_url = "https://auth.toml.example.com/login"
+logout_url = "https://auth.toml.example.com/logout"
+register_url = "https://auth.toml.example.com/register"
+forgot_password_url = "https://auth.toml.example.com/forgot-password"
+
+[services.payment]
+gateway_url = "https://payment.toml.example.com/gateway"
+webhook_url = "https://payment.toml.example.com/webhook"
+success_url = "https://payment.toml.example.com/success"
+cancel_url = "https://payment.toml.example.com/cancel"
+
+[services.notification]
+email_api = "https://email.toml.example.com/send"
+sms_api = "https://sms.toml.example.com/send"
+push_api = "https://push.toml.example.com/send"
+
+# External integrations
+[external_integrations]
+github = "https://api.github.com/repos/user/repo"
+slack = "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+stripe = "https://api.stripe.com/v1/charges"
+sendgrid = "https://api.sendgrid.com/v3/mail/send"
+aws_s3 = "https://s3.amazonaws.com/bucket-name/"
+google_analytics = "https://www.google-analytics.com/collect"
+
+# File upload configuration
+[file_uploads]
+images = "https://uploads.toml.example.com/images"
+documents = "https://uploads.toml.example.com/documents"
+videos = "https://uploads.toml.example.com/videos"
+temp_storage = "file:///tmp/uploads"
+
+# Database configuration
+[database]
+primary = "postgresql://user:pass@db.toml.example.com:5432/main"
+replica = "postgresql://user:pass@replica.toml.example.com:5432/main"
+cache = "redis://cache.toml.example.com:6379/0"
+backup_location = "file:///var/backups/database"
+
+# Monitoring configuration
+[monitoring]
+metrics = "https://metrics.toml.example.com/api"
+logs = "https://logs.toml.example.com/api"
+alerts = "https://alerts.toml.example.com/webhook"
+health_check = "https://health.toml.example.com/status"
+
+# Content delivery network
+[content_delivery]
+images = "//images.toml.example.com/"
+css = "//css.toml.example.com/"
+js = "//js.toml.example.com/"
+fonts = "//fonts.toml.example.com/"
+
+# API documentation
+[api_documentation]
+swagger = "https://docs.toml.example.com/swagger"
+postman = "https://docs.toml.example.com/postman"
+openapi = "https://docs.toml.example.com/openapi.toml"
+
+# Webhook endpoints (array format)
+webhook_endpoints = [
+  "https://webhook.toml.example.com/github",
+  "https://webhook.toml.example.com/stripe",
+  "https://webhook.toml.example.com/sendgrid",
+  "https://webhook.toml.example.com/slack"
+]
+
+# Redirect URLs (array format)
+redirect_urls = [
+  "https://redirect.toml.example.com/success",
+  "https://redirect.toml.example.com/error",
+  "https://redirect.toml.example.com/cancel"
+]
+
+# CORS origins (array format)
+cors_origins = [
+  "https://app.toml.example.com",
+  "https://admin.toml.example.com",
+  "http://localhost:3000",
+  "//cdn.toml.example.com"
+]
+
+# Feature flags
+[feature_flags.new_api]
+enabled = true
+config_url = "https://config.toml.example.com/new-api"
+
+[feature_flags.beta_features]
+enabled = false
+docs_url = "https://docs.toml.example.com/beta"
+
+# Social media links
+[social_links]
+twitter = "https://twitter.com/tomlexample"
+facebook = "https://facebook.com/tomlexample"
+linkedin = "https://linkedin.com/company/tomlexample"
+github = "https://github.com/tomlexample"
+
+# Legal pages
+[legal]
+privacy_policy = "https://legal.toml.example.com/privacy"
+terms_of_service = "https://legal.toml.example.com/terms"
+cookie_policy = "https://legal.toml.example.com/cookies"
+
+# Support configuration
+[support]
+help_center = "https://help.toml.example.com/"
+contact_form = "https://help.toml.example.com/contact"
+live_chat = "wss://chat.toml.example.com/support"
+
+# Nested complex example
+[nested_complex_example.level1.level2.level3]
+deep_api_url = "https://deep.toml.example.com/api/v1/nested"
+deep_cdn_url = "//deep-cdn.toml.example.com/nested/assets"
+
+# Array of tables with URLs
+[[array_of_objects_with_urls]]
+name = "service1"
+url = "https://service1.toml.example.com/api"
+health_check = "https://service1.toml.example.com/health"
+
+[[array_of_objects_with_urls]]
+name = "service2"
+url = "https://service2.toml.example.com/api"
+health_check = "https://service2.toml.example.com/health"
+
+[[array_of_objects_with_urls]]
+name = "service3"
+url = "http://service3.toml.example.com:8080/api"
+health_check = "http://service3.toml.example.com:8080/health"
+
+# Special characters in URLs
+[special_characters]
+url_with_spaces = "https://api.toml.example.com/search?q=hello%20world"
+url_with_special_chars = "https://api.toml.example.com/path?param=value&other=test%26data"
+url_with_unicode = "https://api.toml.example.com/unicode?name=José"
+
+# Multi-line strings with URLs
+[multi_line_strings]
+basic_string = """
+This is a multi-line basic string that contains URLs:
+- API endpoint: https://multiline.toml.example.com/api
+- Documentation: https://multiline-docs.toml.example.com/guide
+- Support: https://multiline-support.toml.example.com/help
+"""
+
+literal_string = '''
+This is a multi-line literal string with URLs:
+API_URL="https://literal.toml.example.com/api"
+DOCS_URL="https://literal-docs.toml.example.com/guide"
+'''
+
+# Build and deployment configuration
+[build]
+# Build comment: https://build-comment.toml.example.com/ignored
+output_dir = "dist"
+public_url = "https://build.toml.example.com/"
+api_proxy = "https://build-api.toml.example.com/api"
+
+[deployment.production]
+# Deployment comment: https://deploy-comment.toml.example.com/ignored
+host = "https://deploy-prod.toml.example.com"
+api_url = "https://deploy-api-prod.toml.example.com/v1"
+
+[deployment.staging]
+host = "https://deploy-staging.toml.example.com"
+api_url = "https://deploy-api-staging.toml.example.com/v1"
+
+# Server configuration
+[server]
+listen_address = "0.0.0.0:8080"
+base_url = "https://server.toml.example.com"
+static_url = "//static.toml.example.com/assets"
+upload_url = "https://uploads.toml.example.com/files"
+
+# Logging configuration
+[logging]
+# Logging comment: https://log-comment.toml.example.com/ignored
+level = "info"
+remote_endpoint = "https://logs.toml.example.com/ingest"
+error_webhook = "https://errors.toml.example.com/webhook"
+
+# Cache configuration
+[cache]
+redis_url = "redis://cache.toml.example.com:6379/0"
+memcached_servers = [
+  "memcached://mc1.toml.example.com:11211",
+  "memcached://mc2.toml.example.com:11211"
+]
+
+# Message queue configuration
+[message_queue]
+rabbitmq_url = "amqp://user:pass@mq.toml.example.com:5672/"
+redis_url = "redis://queue.toml.example.com:6379/1"
+
+# Security configuration
+[security]
+# Security comment: https://security-comment.toml.example.com/ignored
+cors_allowed_origins = [
+  "https://secure.toml.example.com",
+  "https://admin.toml.example.com"
+]
+oauth_redirect_url = "https://auth.toml.example.com/oauth/callback"
+webhook_secret_url = "https://secrets.toml.example.com/webhook-secret"
+
+# Comments with URLs throughout the file
+# Docker registry: https://registry-comment.toml.example.com/ignored
+# Configuration docs: https://config-docs-comment.toml.example.com/ignored
+# Rust crate: https://crates-comment.toml.example.com/ignored
+
+# End of file comment: https://end-toml.example.com/final

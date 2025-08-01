@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Test</title>
+  <link rel="stylesheet" href="https://cdn.example.com/styles.css">
+  <script src="https://cdn.example.com/script.js"></script>
+</head>
+<body>
+  <h1>URL Test</h1>
+  <p>This is a test file with some URLs:</p>
+  <ul>
+    <li><a href="https://example.com">Example</a></li>
+    <li><a href="//foobar.com">Example</a></li>
+    <li><a href="//afsweb/dist/test/foobar.html">Example</a></li>
+    <li><a href="https://test.org/path?query=value">Test</a></li>
+    <li><a href="/relative/path">Relative Path (should be ignored)</a></li>
+  </ul>
+  <img src="https://images.example.com/image.jpg" alt="Example Image">
+  <!-- Commented URL: https://commented-html.example.com/should-be-ignored -->
+  <!-- Block comment with URL: https://block-html.example.com/should-be-ignored -->
+  <script>
+    // This is a JavaScript comment with URL: https://js-comment.example.com/should-be-ignored
+    const apiUrl = 'https://api.example.com/data';
+    
+    /* Block comment with URL: https://js-block-comment.example.com/should-be-ignored */
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => console.log(data));
+    
+    // Another comment: https://another-comment.example.com/ignored
+  </script>
+</body>
+</html>
