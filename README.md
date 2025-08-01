@@ -358,11 +358,3 @@ npm run lint:fix
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for version history and breaking changes.
-
----
-
-**Morgan Stanley** - Building better software through advanced tooling.
