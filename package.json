@@ -31,7 +31,7 @@
     "@tree-sitter-grammars/tree-sitter-xml": "^0.7.0",
     "@tree-sitter-grammars/tree-sitter-yaml": "^0.7.1",
     "cli-table3": "^0.6.0",
-    "commander": "^11.0.0",
+    "commander": "^14.0.0",
     "fast-glob": "^3.3.3",
     "minimatch": "^10.0.3",
     "p-limit": "^3.1.0",
