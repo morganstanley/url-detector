@@ -1,5 +1,10 @@
 # URL Detector
 
+![Lifecycle Incubating](https://badgen.net/badge/Lifecycle/Incubating/yellow)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/morganstanley/url-detector/badge)](https://securityscorecards.dev/viewer/?uri=github.com/morganstanley/url-detector)
+
 A URL detection tool that scans files using Tree-sitter parsers for accurate URL discovery across 19+ programming languages. Instead of simple regex matching, this tool performs AST (Abstract Syntax Tree) parsing to precisely locate URLs in strings, comments, and other appropriate contexts.
 
 ## Features
