@@ -125,6 +125,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | Go | `.go` | [`tree-sitter-go`](https://npmjs.com/package/tree-sitter-go) |
 | Swift | `.swift` | [`tree-sitter-swift`](https://npmjs.com/package/tree-sitter-swift) |
 | Kotlin | `.kt`, `.kts` | [`@tree-sitter-grammars/tree-sitter-kotlin`](https://npmjs.com/package/@tree-sitter-grammars/tree-sitter-kotlin) |
+| Scala | `.scala`, `.sc` | [`tree-sitter-scala`](https://npmjs.com/package/tree-sitter-scala) |
 | HTML | `.html`, `.htm` | [`tree-sitter-html`](https://npmjs.com/package/tree-sitter-html) |
 | CSS | `.css` | [`tree-sitter-css`](https://npmjs.com/package/tree-sitter-css) |
 | JSON | `.json`, `.jsonc` | [`tree-sitter-json`](https://npmjs.com/package/tree-sitter-json) |

@@ -29,6 +29,8 @@ describe('LanguageManager', () => {
         expect(manager.getLanguage('.cs')).toBeDefined();
         expect(manager.getLanguage('.html')).toBeDefined();
         expect(manager.getLanguage('.css')).toBeDefined();
+        expect(manager.getLanguage('.scala')).toBeDefined();
+        expect(manager.getLanguage('.sc')).toBeDefined();
     });
 
     test('should return undefined for unsupported extensions', () => {
