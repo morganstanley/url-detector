@@ -9,7 +9,7 @@ A URL detection tool that scans files using Tree-sitter parsers for accurate URL
 
 ## Features
 
-- **🌐 19+ Language Support**: JavaScript, TypeScript, Java, C/C++, C#, HTML, CSS, Python, PHP, Ruby, Go, JSON, XML, TOML, Bash, Swift, Kotlin, and more
+- **🌐 20+ Language Support**: JavaScript, TypeScript, Java, C/C++, C#, HTML, CSS, Python, PHP, Ruby, Go, Scala, JSON, XML, TOML, Bash, Swift, Kotlin, and more
 - **🌳 AST-Based Parsing**: Uses Tree-sitter for accurate tokenization and context-aware URL detection
 - **🚀 High Performance**: Concurrent file processing with configurable concurrency limits
 - **📊 Multiple Output Formats**: Table, JSON, and CSV output with customizable formatting

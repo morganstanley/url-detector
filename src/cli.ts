@@ -20,16 +20,14 @@ import { URLDetector } from './urlDetector';
 import { OutputFormat } from './options';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger';
 import { OutputFormatter } from './outputFormatter';
+const packageJson = require('../package.json');
 
 const program = new Command();
 
 program
     .name('url-detector')
     .description('Scan source code and text files for URLs, detecting all discovered URLs')
-    .version('1.0.0');
-
-// Main options based on new requirements
-program
+    .version(packageJson.version)
     .option('-s, --scan <patterns...>', 'Glob patterns for files to scan', ['**/*'])
     .option('-e, --exclude <patterns...>', 'Glob patterns for files to exclude', [])
     .option('-i, --ignore-domains <domains...>', 'List of domains to ignore (e.g., example.com)', [])

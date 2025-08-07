@@ -1,6 +1,7 @@
 {
   "name": "@morgan-stanley/url-detector",
-  "version": "1.0.0",
+  "version": "0.1.0-beta.1",
+
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "A command-line tool that scans source code and text files for URLs, detecting all discovered URLs",
@@ -23,7 +24,12 @@
   "keywords": [
     "scanner"
   ],
+  "homepage": "https://github.com/morganstanley/url-detector",
   "author": "Morgan Stanley",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morganstanley/url-detector.git"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
