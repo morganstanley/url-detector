@@ -5,7 +5,25 @@
 [![CI](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/morganstanley/url-detector/badge)](https://securityscorecards.dev/viewer/?uri=github.com/morganstanley/url-detector)
 
-A URL detection tool that scans files using Tree-sitter parsers for accurate URL discovery across 19+ programming languages. Instead of simple regex matching, this tool performs AST (Abstract Syntax Tree) parsing to precisely locate URLs in strings, comments, and other appropriate contexts.
+A URL detection tool that scans files using Tree-sitter parsers for accurate URL discovery across 20+ programming languages. Instead of simple regex matching, this tool performs AST (Abstract Syntax Tree) parsing to precisely locate URLs in strings, comments, and other appropriate contexts.
+
+## The SBOM Gap
+
+Software Bill of Materials (SBOM) generation has become critical for security and compliance, but traditional SBOM tools miss a significant category of external dependencies: URLs embedded directly in source code.
+
+Modern package managers and dependency scanners excel at tracking managed dependencies (npm packages, Maven artifacts, etc.), but they can't detect legacy patterns like:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto">
+```
+
+```javascript
+const API_ENDPOINT = "https://api.thirdparty.com/v1";
+fetch("https://analytics.example.com/track", { ... });
+```
+
+These URLs represent real external dependencies that can impact security, availability, and compliance - but they won't appear in any SBOM generated from package metadata. URL Detector fills this gap by providing comprehensive URL inventory that complements traditional dependency tracking tools.
 
 ## Features
 
@@ -351,17 +369,6 @@ npm run lint
 # Fix auto-fixable issues
 npm run lint:fix
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Add tests for new functionality
-4. Ensure all tests pass (`npm test`)
-5. Ensure code style is correct (`npm run lint`)
-6. Commit your changes (`git commit -m 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
 
 ## License
 
