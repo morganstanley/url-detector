@@ -73,28 +73,5 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.3.4",
     "typescript": "^5.8.3"
-  },
-  "bundleDependencies": [
-    "@tree-sitter-grammars/tree-sitter-kotlin",
-    "@tree-sitter-grammars/tree-sitter-toml",
-    "@tree-sitter-grammars/tree-sitter-xml",
-    "@tree-sitter-grammars/tree-sitter-yaml",
-    "tree-sitter",
-    "tree-sitter-bash",
-    "tree-sitter-c",
-    "tree-sitter-c-sharp",
-    "tree-sitter-cpp",
-    "tree-sitter-css",
-    "tree-sitter-go",
-    "tree-sitter-html",
-    "tree-sitter-java",
-    "tree-sitter-javascript",
-    "tree-sitter-json",
-    "tree-sitter-php",
-    "tree-sitter-python",
-    "tree-sitter-ruby",
-    "tree-sitter-scala",
-    "tree-sitter-swift",
-    "tree-sitter-typescript"
-  ]
+  }
 }
