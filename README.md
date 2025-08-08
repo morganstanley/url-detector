@@ -18,9 +18,11 @@ A URL detection tool that scans files using Tree-sitter parsers for accurate URL
 - **🔍 Context Detection**: Finds URLs in string literals, comments, and appropriate language constructs
 - **🛡️ False Positive Filtering**: Automatically excludes common schema patterns (//W3C//DTD, //EN, etc.)
 - **⚙️ Highly Configurable**: Extensive CLI options and programmatic API
-- **📦 Zero Config**: Bundled dependencies eliminate peer dependency conflicts
+- **📦 Zero Config**: Easy setup without complex configuration
 
 ## Installation
+
+To suppress warnings from tree-sitter transitive dependencies, all these commands can be run optionally with --loglevel=error flag.
 
 ### Global Installation (Recommended)
 
