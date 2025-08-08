@@ -22,7 +22,7 @@ A URL detection tool that scans files using Tree-sitter parsers for accurate URL
 
 ## Installation
 
-To suppress warnings from tree-sitter transitive dependencies all these commands can be run optionally with --loglevel=error flag.
+To suppress warnings from tree-sitter transitive dependencies, all these commands can be run optionally with --loglevel=error flag.
 
 ### Global Installation (Recommended)
 
