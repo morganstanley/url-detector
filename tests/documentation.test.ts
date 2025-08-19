@@ -30,16 +30,13 @@ describe('Documentation Sync Tests', () => {
 
     describe('CLI Options Documentation', () => {
         it('should document all CLI options defined in cli.ts', () => {
-            // Extract options from README table first
-            const tableMatch = readmeContent.match(/\| Option \| Description \| Default \|([\s\S]*?)\n\n/);
-            if (!tableMatch) {
-                throw new Error('Could not find CLI options table in README.md');
-            }
-
-            const tableContent = tableMatch[1];
-            const optionRows = tableContent
+            // Find all table rows in CLI Options section
+            const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && !line.includes('----------'));
+                .filter(line => line.trim().startsWith('|') && 
+                        line.includes('--') && 
+                        !line.includes('Option') && 
+                        !line.includes('----------'));
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {
@@ -104,17 +101,13 @@ describe('Documentation Sync Tests', () => {
         });
 
         it('should not document CLI options that do not exist in code', () => {
-            // Extract options from README table
-            const tableMatch = readmeContent.match(/\| Option \| Description \| Default \|([\s\S]*?)\n\n/);
-            if (!tableMatch) {
-                fail('Could not find CLI options table in README.md');
-                return;
-            }
-
-            const tableContent = tableMatch[1];
-            const optionRows = tableContent
+            // Find all table rows in CLI Options section
+            const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && !line.includes('----------'));
+                .filter(line => line.trim().startsWith('|') && 
+                        line.includes('--') && 
+                        !line.includes('Option') && 
+                        !line.includes('----------'));
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {
@@ -194,7 +187,7 @@ describe('Documentation Sync Tests', () => {
             // Extract languages from README table
             const tableMatch = readmeContent.match(/\| Language \| Extensions \| Tree-sitter Parser \|([\s\S]*?)\n>/);
             if (!tableMatch) {
-                fail('Could not find Supported Languages table in README.md');
+                throw new Error('Could not find Supported Languages table in README.md');
                 return;
             }
 
@@ -232,7 +225,7 @@ describe('Documentation Sync Tests', () => {
             // Extract languages and extensions from README table
             const tableMatch = readmeContent.match(/\| Language \| Extensions \| Tree-sitter Parser \|([\s\S]*?)\n>/);
             if (!tableMatch) {
-                fail('Could not find Supported Languages table in README.md');
+                throw new Error('Could not find Supported Languages table in README.md');
                 return;
             }
 
