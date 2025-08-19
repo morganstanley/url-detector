@@ -1,6 +1,6 @@
 {
   "name": "@morgan-stanley/url-detector",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.2",
 
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -41,9 +41,9 @@
     "fast-glob": "^3.3.3",
     "minimatch": "^10.0.3",
     "p-limit": "^3.1.0",
-    "tree-sitter": "^0.25.0",
-    "tree-sitter-bash": "^0.25.0",
-    "tree-sitter-c": "^0.24.1",
+    "tree-sitter": "^0.22.4",
+    "tree-sitter-bash": "0.21.0",
+    "tree-sitter-c": "0.21.4",
     "tree-sitter-c-sharp": "^0.23.1",
     "tree-sitter-cpp": "^0.23.4",
     "tree-sitter-css": "^0.23.2",
