@@ -371,6 +371,27 @@ npm run lint
 npm run lint:fix
 ```
 
+### Creating Self-Contained Executables
+
+The project supports creating standalone executables for distribution using [pkg](https://github.com/yao-pkg/pkg):
+
+```bash
+# Create executables for all platforms
+npm run pkg:all
+
+# Create platform-specific executables
+npm run pkg:linux    # Creates url-detector-linux
+npm run pkg:macos    # Creates url-detector-macos  
+npm run pkg:win      # Creates url-detector-win.exe
+```
+
+The executables are optimized for size by only including platform-specific native dependencies. Each binary contains:
+- The compiled TypeScript code
+- Node.js runtime
+- Only the Tree-sitter prebuilds for the target platform
+
+**Note**: You must run `npm run build` before creating executables to ensure the latest TypeScript changes are compiled.
+
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.
