@@ -13,7 +13,12 @@
     "test:watch": "jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "pkg": "npm run pkg:all",
+    "pkg:all": "npm run pkg:linux && npm run pkg:macos && npm run pkg:win",
+    "pkg:linux": "node scripts/generate-pkg-config.js linux > pkg-linux.json && npx @yao-pkg/pkg dist/cli.js --config pkg-linux.json --output url-detector-linux && rimraf pkg-linux.json",
+    "pkg:macos": "node scripts/generate-pkg-config.js macos > pkg-macos.json && npx @yao-pkg/pkg dist/cli.js --config pkg-macos.json --output url-detector-macos && rimraf pkg-macos.json",
+    "pkg:win": "node scripts/generate-pkg-config.js win > pkg-win.json && npx @yao-pkg/pkg dist/cli.js --config pkg-win.json --output url-detector-win.exe && rimraf pkg-win.json"
   },
   "bin": {
     "url-detector": "./dist/cli.js"

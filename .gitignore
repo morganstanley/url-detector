@@ -34,6 +34,11 @@ yarn-error.log*
 # OS specific
 .DS_Store
 Thumbs.db
+
+# PKG generated binaries
 url-detector-linux
 url-detector-macos
 url-detector-win.exe
+
+# Temporary PKG config files
+pkg-*.json
