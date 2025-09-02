@@ -78,5 +78,67 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.3.4",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@tree-sitter-grammars/tree-sitter-kotlin": {
+      "tree-sitter": "0.22.4"
+    },
+    "@tree-sitter-grammars/tree-sitter-toml": {
+      "tree-sitter": "0.22.4"
+    },
+    "@tree-sitter-grammars/tree-sitter-xml": {
+      "tree-sitter": "0.22.4"
+    },
+    "@tree-sitter-grammars/tree-sitter-yaml": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-bash": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-c": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-c-sharp": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-cpp": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-css": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-go": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-html": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-java": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-javascript": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-json": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-php": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-python": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-ruby": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-scala": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-swift": {
+      "tree-sitter": "0.22.4"
+    },
+    "tree-sitter-typescript": {
+      "tree-sitter": "0.22.4"
+    }
   }
 }

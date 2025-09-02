@@ -337,15 +337,13 @@ tests/
 
 ### Local Development Setup
 
-When cloning this project for local development, you'll need to use the `--legacy-peer-deps` flag due to complex peer dependencies across Tree-sitter packages:
-
 ```bash
 # Clone the repository
 git clone https://github.com/morgan-stanley/url-detector.git
 cd url-detector
 
-# Install dependencies with legacy peer deps support
-npm install --legacy-peer-deps
+# Install dependencies
+npm install
 ```
 
 ### Building

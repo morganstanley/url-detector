@@ -15,7 +15,7 @@
 
 ## Developer Workflows
 - **Install dependencies:**
-  - Use `npm install --legacy-peer-deps` (required for Tree-sitter peer deps)
+  - All tree-sitter grammar libraries need an override entry in package.json to align with the direct tree-sitter library version
 - **Build:**
   - `npm run build` (TypeScript → JavaScript)
   - `npm run clean` (remove build artifacts)
@@ -48,7 +48,7 @@
   - Import `URLDetector` and `LanguageManager` from the package for custom workflows.
 
 ## Project-Specific Notes
-- **Peer Dependency Issues:** Always use `--legacy-peer-deps` with npm install.  Only allow upgrades of tree-sitter package if it includes prebuilts and you have verified compatibility.  Currently 0.22.4 is the latest release that includes prebuilts, 0.25.0 does not include prebuilts and will not work.
+- **Dependency Issues:** Only allow upgrades of tree-sitter package if it includes prebuilts and you have verified compatibility.  Currently 0.22.4 is the latest release that includes prebuilts, 0.25.0 does not include prebuilts and will not work.
 - **Documentation Sync:** Update both CLI code and README when adding options; tests will fail if out of sync.
 
 ---
