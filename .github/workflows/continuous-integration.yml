@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
       with:
         node-version: ${{ env.NODE_VERSION }}
-    - run: npm ci --legacy-peer-deps
+    - run: npm ci
     - run: npm run build
     - run: npm run test:coverage
 
