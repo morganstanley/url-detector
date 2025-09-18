@@ -28,8 +28,7 @@ jobs:
       - run: npm test
       - run: npm run pkg:all
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
       - name: Upload Linux binary
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
@@ -39,6 +38,7 @@ jobs:
           asset_path: ./url-detector-linux
           asset_name: url-detector-linux
           asset_content_type: application/octet-stream
+
       - name: Upload macOS binary
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
@@ -48,6 +48,7 @@ jobs:
           asset_path: ./url-detector-macos
           asset_name: url-detector-macos
           asset_content_type: application/octet-stream
+          
       - name: Upload Windows binary
         uses: actions/upload-release-asset@e8f9f06c4b078e705bd2ea027f0926603fc9b4d5 # v1.0.2
         env:
