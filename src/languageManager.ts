@@ -63,7 +63,6 @@ export class LanguageManager {
         { name: 'toml', displayName: 'TOML', module: '@tree-sitter-grammars/tree-sitter-toml', extensions: ['.toml'] },
         { name: 'xml', displayName: 'XML', module: '@tree-sitter-grammars/tree-sitter-xml', extensions: ['.xml', '.xsd', '.xsl', '.xslt'] },
         { name: 'bash', displayName: 'Bash', module: 'tree-sitter-bash', extensions: ['.sh', '.bash', '.zsh', '.fish'] },
-        { name: 'swift', displayName: 'Swift', module: 'tree-sitter-swift', extensions: ['.swift'] },
         { name: 'kotlin', displayName: 'Kotlin', module: '@tree-sitter-grammars/tree-sitter-kotlin', extensions: ['.kt', '.kts'] },
         { name: 'scala', displayName: 'Scala', module: 'tree-sitter-scala', extensions: ['.scala', '.sc'] },
         { name: 'yaml', displayName: 'YAML', module: '@tree-sitter-grammars/tree-sitter-yaml', extensions: ['.yaml', '.yml'] },
