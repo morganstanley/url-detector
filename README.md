@@ -28,7 +28,7 @@ These URLs represent real external dependencies that can impact security, availa
 
 ## Features
 
-- **🌐 20+ Language Support**: JavaScript, TypeScript, Java, C/C++, C#, HTML, CSS, Python, PHP, Ruby, Go, Scala, JSON, XML, TOML, Bash, Swift, Kotlin, and more
+- **🌐 Common Language Support**: JavaScript, TypeScript, Java, C/C++, C#, HTML, CSS, Python, PHP, Ruby, Go, Scala, JSON, XML, TOML, Bash, Kotlin, and more
 - **🌳 AST-Based Parsing**: Uses Tree-sitter for accurate tokenization and context-aware URL detection
 - **🚀 High Performance**: Concurrent file processing with configurable concurrency limits
 - **📊 Multiple Output Formats**: Table, JSON, and CSV output with customizable formatting
@@ -144,7 +144,6 @@ const customLanguageManager = new LanguageManager(undefined, [
 | PHP | `.php`, `.phtml` | [`tree-sitter-php`](https://npmjs.com/package/tree-sitter-php) |
 | Ruby | `.rb`, `.rake`, `.gemspec` | [`tree-sitter-ruby`](https://npmjs.com/package/tree-sitter-ruby) |
 | Go | `.go` | [`tree-sitter-go`](https://npmjs.com/package/tree-sitter-go) |
-| Swift | `.swift` | [`tree-sitter-swift`](https://npmjs.com/package/tree-sitter-swift) |
 | Kotlin | `.kt`, `.kts` | [`@tree-sitter-grammars/tree-sitter-kotlin`](https://npmjs.com/package/@tree-sitter-grammars/tree-sitter-kotlin) |
 | Scala | `.scala`, `.sc` | [`tree-sitter-scala`](https://npmjs.com/package/tree-sitter-scala) |
 | HTML | `.html`, `.htm` | [`tree-sitter-html`](https://npmjs.com/package/tree-sitter-html) |
