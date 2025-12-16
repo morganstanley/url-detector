@@ -27,6 +27,7 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run pkg:all
+      - run: npm install -g npm@latest  # trusted publishing requires later version of npm then in node 22 but we need node 22 for tree-sitter right now
       - run: npm publish --provenance --access public
 
       - name: Upload Linux binary
