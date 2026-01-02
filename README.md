@@ -1,6 +1,6 @@
 # URL Detector
 
-![Lifecycle Incubating](https://badgen.net/badge/Lifecycle/Incubating/yellow)
+![Lifecycle Incubating](https://img.shields.io/badge/Lifecycle-Incubating-yellow)
 [![npm](https://img.shields.io/npm/v/@morgan-stanley/url-detector)](https://www.npmjs.com/package/@morgan-stanley/url-detector)
 [![CI](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/morganstanley/url-detector/badge)](https://securityscorecards.dev/viewer/?uri=github.com/morganstanley/url-detector)
