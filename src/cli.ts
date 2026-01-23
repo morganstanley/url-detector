@@ -53,114 +53,146 @@ program
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
     .action(async options => {
-        // Create appropriate logger based on CLI options
-        let logger;
-        if (options.quiet) {
-            logger = NullLogger;
-        } else if (options.resultsOnly) {
-            logger = ResultsOnlyLogger;
-        } else {
-            logger = ConsoleLogger;
-        }
-
-        try {
-            // Create mutable copy of options for processing
-            let scanPatterns = (options.scan as string[]) || [];
-            let excludePatterns = (options.exclude as string[]) || [];
-
-            // Load patterns from files if specified
-            if (options.scanFile) {
-                try {
-                    const fileScanPatterns = await loadPatternsFromFile(options.scanFile as string);
-                    scanPatterns = [...scanPatterns, ...fileScanPatterns];
-                } catch (error: unknown) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    logger.error('Error loading scan patterns file:', errorMessage);
-                    process.exit(ExitCode.FILE_READ_ERROR);
-                }
-            }
-
-            if (options.excludeFile) {
-                try {
-                    const fileExcludePatterns = await loadPatternsFromFile(options.excludeFile as string);
-                    excludePatterns = [...excludePatterns, ...fileExcludePatterns];
-                } catch (error: unknown) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    logger.error('Error loading exclude patterns file:', errorMessage);
-                    process.exit(ExitCode.FILE_READ_ERROR);
-                }
-            }
-
-            // Create detector with options and logger - catch configuration errors
-            let detector;
-            try {
-                detector = new URLDetector(
-                    {
-                        scan: scanPatterns,
-                        exclude: excludePatterns,
-                        ignoreDomains: options.ignoreDomains as string[],
-                        includeComments: options.includeComments as boolean,
-                        includeNonFqdn: options.includeNonFqdn as boolean,
-                        format: options.format as OutputFormat,
-                        output: options.output as string,
-                        resultsOnly: options.resultsOnly as boolean,
-                        failOnError: options.failOnError as boolean,
-                        concurrency: options.concurrency as number,
-                    },
-                    logger,
-                );
-            } catch (error: unknown) {
-                // Configuration validation errors
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                logger.error('Configuration error:', errorMessage);
-                process.exit(ExitCode.CONFIG_ERROR);
-            }
-
-            // Process results
-            const results = await detector.process();
-
-            // Calculate summary
-            const totalFiles = results.length;
-            const totalUrls = results.reduce((sum, r) => sum + r.urls.length, 0);
-
-            // Handle output formatting - format results if we found URLs or if explicitly requested
-            if (totalUrls > 0) {
-                const outputFormatter = new OutputFormatter(
-                    {
-                        format: (options.format as OutputFormat) || 'table',
-                        outputFile: (options.output as string) || null,
-
-                        withLineNumbers: true,
-                        withFilenames: true,
-                        context: 0,
-                    },
-                    logger,
-                );
-
-                await outputFormatter.formatAndOutput(results);
-            }
-
-            // Print summary using logger
-            logger.info(`Processed ${totalFiles} file(s), found ${totalUrls} URL(s)`);
-
-            // Exit with error code if URLs found and fail-on-error is set
-            if (options.failOnError && totalUrls > 0) {
-                process.exit(ExitCode.URLS_FOUND);
-            }
-        } catch (error: unknown) {
-            // Handle unexpected errors - check if it's a file read error
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            logger.error('Error:', errorMessage);
-
-            // Determine exit code based on error type
-            if (errorMessage.includes('Failed to find files') || errorMessage.includes('ENOENT')) {
-                process.exit(ExitCode.FILE_READ_ERROR);
-            } else {
-                // Default to config error for other unexpected errors
-                process.exit(ExitCode.CONFIG_ERROR);
-            }
+        const exitCode = await runCLI(options);
+        if (exitCode !== ExitCode.SUCCESS) {
+            process.exit(exitCode);
         }
     });
+
+/**
+ * CLI options interface
+ */
+export interface CLIOptions {
+    scan?: string[];
+    exclude?: string[];
+    ignoreDomains?: string[];
+    includeComments?: boolean;
+    includeNonFqdn?: boolean;
+    format?: string;
+    output?: string | null;
+    resultsOnly?: boolean;
+    failOnError?: boolean;
+    concurrency?: number;
+    quiet?: boolean;
+    scanFile?: string;
+    excludeFile?: string;
+}
+
+/**
+ * Main CLI logic extracted for testability
+ * Returns the exit code that should be used
+ */
+export async function runCLI(options: CLIOptions): Promise<number> {
+    // Create appropriate logger based on CLI options
+    let logger;
+    if (options.quiet) {
+        logger = NullLogger;
+    } else if (options.resultsOnly) {
+        logger = ResultsOnlyLogger;
+    } else {
+        logger = ConsoleLogger;
+    }
+
+    try {
+        // Create mutable copy of options for processing
+        let scanPatterns = (options.scan as string[]) || [];
+        let excludePatterns = (options.exclude as string[]) || [];
+
+        // Load patterns from files if specified
+        if (options.scanFile) {
+            try {
+                const fileScanPatterns = await loadPatternsFromFile(options.scanFile as string);
+                scanPatterns = [...scanPatterns, ...fileScanPatterns];
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.error('Error loading scan patterns file:', errorMessage);
+                return ExitCode.FILE_READ_ERROR;
+            }
+        }
+
+        if (options.excludeFile) {
+            try {
+                const fileExcludePatterns = await loadPatternsFromFile(options.excludeFile as string);
+                excludePatterns = [...excludePatterns, ...fileExcludePatterns];
+            } catch (error: unknown) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                logger.error('Error loading exclude patterns file:', errorMessage);
+                return ExitCode.FILE_READ_ERROR;
+            }
+        }
+
+        // Create detector with options and logger - catch configuration errors
+        let detector;
+        try {
+            detector = new URLDetector(
+                {
+                    scan: scanPatterns,
+                    exclude: excludePatterns,
+                    ignoreDomains: options.ignoreDomains as string[],
+                    includeComments: options.includeComments as boolean,
+                    includeNonFqdn: options.includeNonFqdn as boolean,
+                    format: options.format as OutputFormat,
+                    output: options.output as string,
+                    resultsOnly: options.resultsOnly as boolean,
+                    failOnError: options.failOnError as boolean,
+                    concurrency: options.concurrency as number,
+                },
+                logger,
+            );
+        } catch (error: unknown) {
+            // Configuration validation errors
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logger.error('Configuration error:', errorMessage);
+            return ExitCode.CONFIG_ERROR;
+        }
+
+        // Process results
+        const results = await detector.process();
+
+        // Calculate summary
+        const totalFiles = results.length;
+        const totalUrls = results.reduce((sum, r) => sum + r.urls.length, 0);
+
+        // Handle output formatting - format results if we found URLs or if explicitly requested
+        if (totalUrls > 0) {
+            const outputFormatter = new OutputFormatter(
+                {
+                    format: (options.format as OutputFormat) || 'table',
+                    outputFile: (options.output as string) || null,
+
+                    withLineNumbers: true,
+                    withFilenames: true,
+                    context: 0,
+                },
+                logger,
+            );
+
+            await outputFormatter.formatAndOutput(results);
+        }
+
+        // Print summary using logger
+        logger.info(`Processed ${totalFiles} file(s), found ${totalUrls} URL(s)`);
+
+        // Exit with error code if URLs found and fail-on-error is set
+        if (options.failOnError && totalUrls > 0) {
+            return ExitCode.URLS_FOUND;
+        }
+
+        return ExitCode.SUCCESS;
+    } catch (error: unknown) {
+        // Handle unexpected errors - check if it's a file read error
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error('Error:', errorMessage);
+
+        // Determine exit code based on error type
+        if (errorMessage.includes('Failed to find files') || errorMessage.includes('ENOENT')) {
+            return ExitCode.FILE_READ_ERROR;
+        } else {
+            // Default to config error for other unexpected errors
+            return ExitCode.CONFIG_ERROR;
+        }
+    }
+}
 
 async function loadPatternsFromFile(filePath: string): Promise<string[]> {
     const content = await fs.promises.readFile(filePath, 'utf8');
