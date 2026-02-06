@@ -130,6 +130,20 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
 
+## Exit Codes
+
+The CLI uses different exit codes to indicate various conditions:
+
+| Exit Code | Description |
+|-----------|-------------|
+| `0` | Success - no URLs found or URLs found without fail-on-error flag |
+| `1` | URLs found when using the fail-on-error flag |
+| `2` | Configuration error (e.g., invalid format, invalid concurrency value) |
+| `3` | File read error (e.g., scan-file or exclude-file not found) |
+| `4` | Parse error threshold exceeded (reserved for future use) |
+
+These exit codes make it easier to distinguish between different types of failures in CI/CD pipelines and automation scripts.
+
 ## Supported Languages
 
 | Language | Extensions | Tree-sitter Parser |
