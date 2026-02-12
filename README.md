@@ -140,7 +140,6 @@ The CLI uses different exit codes to indicate various conditions:
 | `1` | URLs found when using the fail-on-error flag |
 | `2` | Configuration error (e.g., invalid format, invalid concurrency value) |
 | `3` | File read error (e.g., scan-file or exclude-file not found) |
-| `4` | Parse error threshold exceeded (reserved for future use) |
 
 These exit codes make it easier to distinguish between different types of failures in CI/CD pipelines and automation scripts.
 
