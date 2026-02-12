@@ -147,17 +147,26 @@ program
                 process.exit(ExitCode.URLS_FOUND);
             }
         } catch (error: unknown) {
-            // Handle unexpected errors - check if it's a file read error
+            // Handle unexpected errors
             const errorMessage = error instanceof Error ? error.message : String(error);
             logger.error('Error:', errorMessage);
 
-            // Determine exit code based on error type
-            if (errorMessage.includes('Failed to find files') || errorMessage.includes('ENOENT')) {
-                process.exit(ExitCode.FILE_READ_ERROR);
-            } else {
-                // Default to config error for other unexpected errors
-                process.exit(ExitCode.CONFIG_ERROR);
+            // Determine exit code based on error type using error code property
+            if (error instanceof Error && 'code' in error) {
+                const nodeError = error as NodeJS.ErrnoException;
+                // Check for file system errors (ENOENT, EACCES, etc.)
+                if (nodeError.code === 'ENOENT' || nodeError.code === 'EACCES' || nodeError.code === 'EISDIR') {
+                    process.exit(ExitCode.FILE_READ_ERROR);
+                }
             }
+            
+            // Check for specific error messages as fallback
+            if (errorMessage.includes('Failed to find files')) {
+                process.exit(ExitCode.FILE_READ_ERROR);
+            }
+            
+            // Default to config error for other unexpected errors
+            process.exit(ExitCode.CONFIG_ERROR);
         }
     });
 
