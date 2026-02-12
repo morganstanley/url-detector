@@ -30,7 +30,6 @@ export const ExitCode = {
     URLS_FOUND: 1, // URLs found (when --fail-on-error)
     CONFIG_ERROR: 2, // Configuration error
     FILE_READ_ERROR: 3, // File read error
-    PARSE_ERROR: 4, // Parse error threshold exceeded
 } as const;
 
 const program = new Command();
