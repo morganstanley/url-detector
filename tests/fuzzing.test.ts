@@ -33,29 +33,27 @@ describe('URLDetector Fuzzing Tests', () => {
     });
 
     describe('URL Detection Properties', () => {
-        it('should never crash on arbitrary input', () => {
-            fc.assert(
-                fc.property(
+        it('should never crash on arbitrary input', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string(),
                     fc.constantFrom('javascript', 'typescript', 'python', 'java', 'unknown'),
-                    (input, language) => {
-                        expect(() => {
-                            detector.detectURLs(input, language, 'test-file');
-                        }).not.toThrow();
+                    async (input, language) => {
+                        await expect(detector.detectURLs(input, language, 'test-file')).resolves.toBeDefined();
                     },
                 ),
                 { numRuns: 1000 },
             );
         });
 
-        it('should handle extremely long inputs gracefully', () => {
-            fc.assert(
-                fc.property(
+        it('should handle extremely long inputs gracefully', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string({ minLength: 10000, maxLength: 50000 }),
                     fc.constantFrom('javascript', 'typescript', 'python'),
-                    (input, language) => {
+                    async (input, language) => {
                         const start = Date.now();
-                        const result = detector.detectURLs(input, language, 'long-file');
+                        const result = await detector.detectURLs(input, language, 'long-file');
                         const duration = Date.now() - start;
 
                         expect(Array.isArray(result)).toBe(true);
@@ -66,7 +64,7 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should handle valid URL patterns correctly', () => {
+        it('should handle valid URL patterns correctly', async () => {
             const testCases = [
                 { input: 'const url = "https://example.com";', language: 'javascript' },
                 { input: 'url = "http://localhost:3000"', language: 'python' },
@@ -74,9 +72,9 @@ describe('URLDetector Fuzzing Tests', () => {
                 { input: 'let endpoint: string = "https://www.google.com/search";', language: 'typescript' },
             ];
 
-            fc.assert(
-                fc.property(fc.constantFrom(...testCases), testCase => {
-                    const results = detector.detectURLs(testCase.input, testCase.language, 'test-file');
+            await fc.assert(
+                fc.asyncProperty(fc.constantFrom(...testCases), async testCase => {
+                    const results = await detector.detectURLs(testCase.input, testCase.language, 'test-file');
 
                     expect(Array.isArray(results)).toBe(true);
                     expect(results.length).toBeGreaterThan(0);
@@ -88,9 +86,9 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should handle mixed content with URLs and non-URLs', () => {
-            fc.assert(
-                fc.property(
+        it('should handle mixed content with URLs and non-URLs', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.array(
                         fc.oneof(
                             fc.constantFrom('https://example.com', 'http://test.org', 'https://api.service.com'),
@@ -98,9 +96,9 @@ describe('URLDetector Fuzzing Tests', () => {
                         ),
                     ),
                     fc.constantFrom('javascript', 'typescript', 'python'),
-                    (parts, language) => {
+                    async (parts, language) => {
                         const input = parts.join(' ');
-                        const results = detector.detectURLs(input, language, 'mixed-file');
+                        const results = await detector.detectURLs(input, language, 'mixed-file');
 
                         expect(Array.isArray(results)).toBe(true);
                         results.forEach(result => {
@@ -118,16 +116,16 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should handle special characters and unicode correctly', () => {
-            fc.assert(
-                fc.property(
+        it('should handle special characters and unicode correctly', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string(),
                     fc.constantFrom('https://example.com/path', 'http://localhost:8080'),
                     fc.string(),
                     fc.constantFrom('javascript', 'typescript'),
-                    (prefix, url, suffix, language) => {
+                    async (prefix, url, suffix, language) => {
                         const input = prefix + url + suffix;
-                        const results = detector.detectURLs(input, language, 'unicode-file');
+                        const results = await detector.detectURLs(input, language, 'unicode-file');
 
                         expect(() => {
                             JSON.stringify(results);
@@ -138,14 +136,18 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should maintain consistent results for identical inputs', () => {
-            fc.assert(
-                fc.property(fc.string(), fc.constantFrom('javascript', 'typescript', 'python'), (input, language) => {
-                    const result1 = detector.detectURLs(input, language, 'consistency-test');
-                    const result2 = detector.detectURLs(input, language, 'consistency-test');
+        it('should maintain consistent results for identical inputs', async () => {
+            await fc.assert(
+                fc.asyncProperty(
+                    fc.string(),
+                    fc.constantFrom('javascript', 'typescript', 'python'),
+                    async (input, language) => {
+                        const result1 = await detector.detectURLs(input, language, 'consistency-test');
+                        const result2 = await detector.detectURLs(input, language, 'consistency-test');
 
-                    expect(result1).toEqual(result2);
-                }),
+                        expect(result1).toEqual(result2);
+                    },
+                ),
                 { numRuns: 100 },
             );
         });
@@ -181,34 +183,32 @@ describe('URLDetector Fuzzing Tests', () => {
     });
 
     describe('Edge Cases and Error Handling', () => {
-        it('should handle null bytes and control characters', () => {
-            fc.assert(
-                fc.property(
+        it('should handle null bytes and control characters', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string().map(s => s + '\0' + s),
                     fc.constantFrom('javascript', 'typescript'),
-                    (input, language) => {
-                        expect(() => {
-                            detector.detectURLs(input, language, 'null-byte-file');
-                        }).not.toThrow();
+                    async (input, language) => {
+                        await expect(detector.detectURLs(input, language, 'null-byte-file')).resolves.toBeDefined();
                     },
                 ),
                 { numRuns: 100 },
             );
         });
 
-        it('should handle deeply nested structures', () => {
+        it('should handle deeply nested structures', async () => {
             const createNestedString = (depth: number): string => {
                 if (depth === 0) return 'https://example.com';
                 return `{${createNestedString(depth - 1)}}`;
             };
 
-            fc.assert(
-                fc.property(
+            await fc.assert(
+                fc.asyncProperty(
                     fc.integer({ min: 1, max: 100 }),
                     fc.constantFrom('javascript', 'json'),
-                    (depth, language) => {
+                    async (depth, language) => {
                         const input = createNestedString(depth);
-                        const results = detector.detectURLs(input, language, 'nested-file');
+                        const results = await detector.detectURLs(input, language, 'nested-file');
 
                         expect(Array.isArray(results)).toBe(true);
                     },
@@ -217,7 +217,7 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should handle malformed URLs gracefully', () => {
+        it('should handle malformed URLs gracefully', async () => {
             const malformedUrls = [
                 'http://',
                 'https://',
@@ -229,31 +229,29 @@ describe('URLDetector Fuzzing Tests', () => {
                 'https://...',
             ];
 
-            fc.assert(
-                fc.property(
+            await fc.assert(
+                fc.asyncProperty(
                     fc.constantFrom(...malformedUrls),
                     fc.string(),
                     fc.constantFrom('javascript', 'typescript'),
-                    (malformedUrl, context, language) => {
+                    async (malformedUrl, context, language) => {
                         const input = context + malformedUrl + context;
 
-                        expect(() => {
-                            detector.detectURLs(input, language, 'malformed-file');
-                        }).not.toThrow();
+                        await expect(detector.detectURLs(input, language, 'malformed-file')).resolves.toBeDefined();
                     },
                 ),
                 { numRuns: 100 },
             );
         });
 
-        it('should handle extremely long URLs', () => {
-            fc.assert(
-                fc.property(
+        it('should handle extremely long URLs', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string({ minLength: 1000, maxLength: 10000 }),
                     fc.constantFrom('javascript', 'typescript'),
-                    (longPath, language) => {
+                    async (longPath, language) => {
                         const longUrl = `https://example.com/${longPath}`;
-                        const results = detector.detectURLs(longUrl, language, 'long-url-file');
+                        const results = await detector.detectURLs(longUrl, language, 'long-url-file');
 
                         expect(Array.isArray(results)).toBe(true);
                         if (results.length > 0) {
@@ -269,14 +267,14 @@ describe('URLDetector Fuzzing Tests', () => {
     });
 
     describe('Performance Properties', () => {
-        it('should complete within reasonable time bounds', () => {
-            fc.assert(
-                fc.property(
+        it('should complete within reasonable time bounds', async () => {
+            await fc.assert(
+                fc.asyncProperty(
                     fc.string({ minLength: 100, maxLength: 5000 }),
                     fc.constantFrom('javascript', 'typescript'),
-                    (input, language) => {
+                    async (input, language) => {
                         const start = Date.now();
-                        const results = detector.detectURLs(input, language, 'perf-test');
+                        const results = await detector.detectURLs(input, language, 'perf-test');
                         const duration = Date.now() - start;
 
                         expect(Array.isArray(results)).toBe(true);
@@ -289,7 +287,7 @@ describe('URLDetector Fuzzing Tests', () => {
     });
 
     describe('Regression Tests', () => {
-        it('should handle common problematic patterns', () => {
+        it('should handle common problematic patterns', async () => {
             const problematicPatterns = [
                 '//example.com', // Protocol-relative URL
                 'https://example.com//double-slash',
@@ -303,15 +301,13 @@ describe('URLDetector Fuzzing Tests', () => {
                 'https://example.com/path[with]square',
             ];
 
-            fc.assert(
-                fc.property(
+            await fc.assert(
+                fc.asyncProperty(
                     fc.constantFrom(...problematicPatterns),
                     fc.constantFrom('javascript', 'typescript', 'html'),
-                    (pattern, language) => {
-                        expect(() => {
-                            const results = detector.detectURLs(pattern, language, 'problematic-file');
-                            expect(Array.isArray(results)).toBe(true);
-                        }).not.toThrow();
+                    async (pattern, language) => {
+                        const results = await detector.detectURLs(pattern, language, 'problematic-file');
+                        expect(Array.isArray(results)).toBe(true);
                     },
                 ),
                 { numRuns: 100 },

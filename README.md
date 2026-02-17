@@ -94,7 +94,7 @@ const apiUrl = "https://api.example.com/v1/users";
 // Documentation: https://docs.example.com
 `;
 
-const urls = detector.detectURLs(sourceCode, 'javascript', 'app.js');
+const urls = await detector.detectURLs(sourceCode, 'javascript', 'app.js');
 console.log(urls);
 
 // Advanced usage with custom options
@@ -213,7 +213,7 @@ url-detector --scan "**/*" --results-only --format table
 ```typescript
 class URLDetector {
     constructor(options?: DetectorOptionsConfig, logger?: Logger);
-    detectURLs(sourceCode: string, language: string, filePath?: string): URLMatch[];
+    detectURLs(sourceCode: string, language: string, filePath?: string): Promise<URLMatch[]>;
     process(): Promise<FileResult[]>;
 }
 ```
