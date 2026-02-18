@@ -166,12 +166,12 @@ export class URLDetector {
      * @example
      * ```typescript
      * const sourceCode = 'const url = "https://example.com/api";';
-     * const urls = detector.detectURLs(sourceCode, 'javascript', 'app.js');
+     * const urls = await detector.detectURLs(sourceCode, 'javascript', 'app.js');
      * console.log(urls[0].url); // "https://example.com/api"
      * console.log(urls[0].line); // 1
      * ```
      */
-    public detectURLs(sourceCode: string, language: string, filePath: string = '<unknown>'): URLMatch[] {
+    public async detectURLs(sourceCode: string, language: string, filePath: string = '<unknown>'): Promise<URLMatch[]> {
         try {
             const languageGrammar = this.languageManager.getLanguage(language);
 
@@ -504,7 +504,7 @@ export class URLDetector {
         try {
             const content: string = await fs.promises.readFile(filePath, 'utf8');
             const language = this.languageManager.detectLanguageFromPath(filePath);
-            const urls = this.detectURLs(content, language, filePath);
+            const urls = await this.detectURLs(content, language, filePath);
             const filteredUrls = this.urlFilter.filterUrls(urls);
 
             return {

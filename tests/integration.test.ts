@@ -104,7 +104,7 @@ describe('Integration Tests - Examples Validation', () => {
         }
     });
 
-    test('all example files should be processed with tree-sitter (no regex fallback)', () => {
+    test('all example files should be processed with tree-sitter (no regex fallback)', async () => {
         const exampleFiles = fs.readdirSync(examplesDir);
         const filesWithFallback: string[] = [];
 
@@ -124,7 +124,7 @@ describe('Integration Tests - Examples Validation', () => {
             // Process the file - auto-detect language from file path
             const languageManager = new LanguageManager();
             const language = languageManager.detectLanguageFromPath(filePath);
-            detector.detectURLs(content, language, filePath);
+            await detector.detectURLs(content, language, filePath);
 
             // Check if fallback was used by looking for warning messages
             const hasFallbackWarning = testLogger.warnings.some(
@@ -146,7 +146,7 @@ describe('Integration Tests - Examples Validation', () => {
         }
     });
 
-    test('all example files should be successfully processed without errors', () => {
+    test('all example files should be successfully processed without errors', async () => {
         const exampleFiles = fs.readdirSync(examplesDir);
         const filesWithErrors: string[] = [];
 
@@ -167,7 +167,7 @@ describe('Integration Tests - Examples Validation', () => {
                 // Process the file - should not throw errors for supported languages
                 const languageManager = new LanguageManager();
                 const language = languageManager.detectLanguageFromPath(filePath);
-                const urls = detector.detectURLs(content, language, filePath);
+                const urls = await detector.detectURLs(content, language, filePath);
 
                 // Check for any error messages
                 if (testLogger.errors.length > 0) {
@@ -186,7 +186,7 @@ describe('Integration Tests - Examples Validation', () => {
         }
     });
 
-    test('all example files should produce URLs with proper sourceType (not unknown)', () => {
+    test('all example files should produce URLs with proper sourceType (not unknown)', async () => {
         const exampleFiles = fs.readdirSync(examplesDir);
         const filesWithUnknownSource: string[] = [];
 
@@ -205,7 +205,7 @@ describe('Integration Tests - Examples Validation', () => {
 
             const languageManager = new LanguageManager();
             const language = languageManager.detectLanguageFromPath(filePath);
-            const urls = detector.detectURLs(content, language, filePath);
+            const urls = await detector.detectURLs(content, language, filePath);
 
             // Check if any URLs have sourceType 'unknown' (indicates regex fallback)
             const unknownSourceUrls = urls.filter(url => url.sourceType === 'unknown');
@@ -223,7 +223,7 @@ describe('Integration Tests - Examples Validation', () => {
         }
     });
 
-    test('example files should be processed by URLDetector', () => {
+    test('example files should be processed by URLDetector', async () => {
         const exampleFiles = fs.readdirSync(examplesDir);
 
         for (const file of exampleFiles) {
@@ -243,7 +243,7 @@ describe('Integration Tests - Examples Validation', () => {
             const language = languageManager.detectLanguageFromPath(filePath);
 
             // Just verify the detector can process the file without errors
-            expect(() => detector.detectURLs(content, language, filePath)).not.toThrow();
+            await detector.detectURLs(content, language, filePath); // Will throw if it fails
         }
     });
 });
