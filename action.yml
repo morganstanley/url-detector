@@ -16,7 +16,7 @@ inputs:
   include-comments:
     description: 'Also scan commented-out lines for URLs'
     required: false
-    default: 'false'
+    default: false
   format:
     description: 'Output format: table, json, csv'
     required: false
@@ -28,7 +28,7 @@ inputs:
   fail-on-error:
     description: 'Exit with non-zero code if any URLs are found'
     required: false
-    default: 'false'
+    default: false
   concurrency:
     description: 'Maximum number of files to scan concurrently'
     required: false
@@ -36,11 +36,11 @@ inputs:
   results-only:
     description: 'Show only results, suppressing progress and info messages'
     required: false
-    default: 'false'
+    default: false
   quiet:
     description: 'Run in quiet mode with no console output'
     required: false
-    default: 'false'
+    default: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -51,17 +51,3 @@ runs:
     - ${{ inputs.format }}
     - --concurrency
     - ${{ inputs.concurrency }}
-    - --results-only
-    - ${{ inputs.results-only }}
-    - --quiet
-    - ${{ inputs.quiet }}
-    - --fail-on-error
-    - ${{ inputs.fail-on-error }}
-    - --include-comments
-    - ${{ inputs.include-comments }}
-    - --exclude
-    - ${{ inputs.exclude-patterns }}
-    - --ignore-domains
-    - ${{ inputs.ignore-domains }}
-    - --output
-    - ${{ inputs.output-file }}
