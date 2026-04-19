@@ -16,6 +16,9 @@ COPY . .
 # Build the project using npx tsc
 RUN npx tsc
 
+# Make sure the built CLI has proper permissions
+RUN chmod +x /app/dist/cli.js
+
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
 
