@@ -1,0 +1,68 @@
+name: 'URL Detector'
+description: 'A GitHub Action that scans source code and text files for URLs, detecting all discovered URLs using Tree-sitter parsers for accurate URL discovery across 20+ programming languages.'
+inputs:
+  scan-patterns:
+    description: 'Glob patterns for files to scan (e.g., src/**/*)'
+    required: false
+    default: '**/*'
+  exclude-patterns:
+    description: 'Glob patterns for files to exclude (e.g., node_modules/**/*)'
+    required: false
+    default: ''
+  ignore-domains:
+    description: 'List of domains to ignore (supports wildcards, e.g., *.example.com)'
+    required: false
+    default: ''
+  include-comments:
+    description: 'Also scan commented-out lines for URLs'
+    required: false
+    default: 'false'
+  format:
+    description: 'Output format: table, json, csv'
+    required: false
+    default: 'table'
+  output-file:
+    description: 'Output file path (defaults to stdout)'
+    required: false
+    default: ''
+  fail-on-error:
+    description: 'Exit with non-zero code if any URLs are found'
+    required: false
+    default: 'false'
+  concurrency:
+    description: 'Maximum number of files to scan concurrently'
+    required: false
+    default: '10'
+  results-only:
+    description: 'Show only results, suppressing progress and info messages'
+    required: false
+    default: 'false'
+  quiet:
+    description: 'Run in quiet mode with no console output'
+    required: false
+    default: 'false'
+outputs:
+  urls-found:
+    description: 'Number of URLs found in the codebase'
+  total-files:
+    description: 'Total number of files scanned'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - --scan
+    - ${{ inputs.scan-patterns }}
+    - --format
+    - ${{ inputs.format }}
+    - --concurrency
+    - ${{ inputs.concurrency }}
+    - --results-only
+    - ${{ inputs.results-only }}
+    - --quiet
+    - ${{ inputs.quiet }}
+    - --fail-on-error
+    - ${{ inputs.fail-on-error }}
+    - --include-comments
+    - ${{ inputs.include-comments }}
+  env:
+    GITHUB_WORKSPACE: ${{ github.workspace }}

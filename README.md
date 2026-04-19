@@ -389,6 +389,84 @@ The executables are optimized for size by only including platform-specific nativ
 
 **Note**: You must run `npm run build` before creating executables to ensure the latest TypeScript changes are compiled.
 
+## GitHub Action Usage
+
+You can use this URL detector as a GitHub Action in your CI/CD workflows:
+
+### For public repositories (when published to GitHub Marketplace)
+```yaml
+name: URL Detection Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scan-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run URL Detector
+        uses: morganstanley/url-detector@main # Replace with your published action
+        with:
+          scan-patterns: "src/**/*"
+          format: "table"
+          include-comments: true
+          fail-on-error: false
+```
+
+### For private repositories or when using locally
+```yaml
+name: URL Detection Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scan-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run URL Detector
+        uses: ./ # Uses the action in this repository (for local development)
+        with:
+          scan-patterns: "src/**/*"
+          format: "table"
+          include-comments: true
+          fail-on-error: false
+```
+
+### Action Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `scan-patterns` | Glob patterns for files to scan | No | `**/*` |
+| `exclude-patterns` | Glob patterns for files to exclude | No | `''` |
+| `ignore-domains` | Domains to ignore (supports wildcards) | No | `''` |
+| `include-comments` | Also scan commented-out lines for URLs | No | `false` |
+| `format` | Output format: table, json, csv | No | `table` |
+| `output-file` | Output file path | No | `''` |
+| `fail-on-error` | Exit with non-zero code if any URLs are found | No | `false` |
+| `concurrency` | Maximum number of files to scan concurrently | No | `10` |
+| `results-only` | Show only results, suppressing progress and info messages | No | `false` |
+| `quiet` | Run in quiet mode with no console output | No | `false` |
+
+### Action Outputs
+
+| Output | Description |
+|--------|-------------|
+| `urls-found` | Number of URLs found in the codebase |
+| `total-files` | Total number of files scanned |
+
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.
