@@ -1,5 +1,5 @@
 # Use Node.js as base image
-FROM node:22-alpine
+FROM node:22-slim
 
 # Set working directory
 WORKDIR /app
@@ -7,19 +7,23 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Copy source code
-COPY . .
-
 # Install all dependencies (including dev) for building
 RUN npm ci
 
-# Build the project
-RUN npm run build
+# Copy source code
+COPY . .
+
+# Build the project using npx tsc
+RUN npx tsc
+
+# Remove dev dependencies to reduce image size
+RUN npm prune --production
 
 # Create a non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN useradd --create-home --shell /bin/bash nextjs
+
+# Switch to the non-root user
 USER nextjs
 
-# Set entrypoint to the CLI
-ENTRYPOINT ["node", "dist/cli.js"]
+# Set entrypoint to the CLI using absolute path
+ENTRYPOINT ["/app/dist/cli.js"]

@@ -433,13 +433,6 @@ jobs:
 | `results-only` | Show only results, suppressing progress and info messages | No | `false` |
 | `quiet` | Run in quiet mode with no console output | No | `false` |
 
-### Action Outputs
-
-| Output | Description |
-|--------|-------------|
-| `urls-found` | Number of URLs found in the codebase |
-| `total-files` | Total number of files scanned |
-
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.

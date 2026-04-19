@@ -41,11 +41,6 @@ inputs:
     description: 'Run in quiet mode with no console output'
     required: false
     default: 'false'
-outputs:
-  urls-found:
-    description: 'Number of URLs found in the codebase'
-  total-files:
-    description: 'Total number of files scanned'
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -64,5 +59,9 @@ runs:
     - ${{ inputs.fail-on-error }}
     - --include-comments
     - ${{ inputs.include-comments }}
-  env:
-    GITHUB_WORKSPACE: /github/workspace
+    - --exclude
+    - ${{ inputs.exclude-patterns }}
+    - --ignore-domains
+    - ${{ inputs.ignore-domains }}
+    - --output
+    - ${{ inputs.output-file }}
