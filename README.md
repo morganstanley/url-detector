@@ -393,7 +393,6 @@ The executables are optimized for size by only including platform-specific nativ
 
 You can use this URL detector as a GitHub Action in your CI/CD workflows:
 
-### For public repositories (when published to GitHub Marketplace)
 ```yaml
 name: URL Detection Scan
 
@@ -411,33 +410,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run URL Detector
-        uses: morganstanley/url-detector@main # Replace with your published action
-        with:
-          scan-patterns: "src/**/*"
-          format: "table"
-          include-comments: true
-          fail-on-error: false
-```
-
-### For private repositories or when using locally
-```yaml
-name: URL Detection Scan
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  scan-code:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run URL Detector
-        uses: ./ # Uses the action in this repository (for local development)
+        uses: morganstanley/url-detector@main
         with:
           scan-patterns: "src/**/*"
           format: "table"
