@@ -65,4 +65,4 @@ runs:
     - --include-comments
     - ${{ inputs.include-comments }}
   env:
-    GITHUB_WORKSPACE: ${{ github.workspace }}
+    GITHUB_WORKSPACE: /github/workspace
