@@ -16,9 +16,6 @@ COPY . .
 # Build the project using npx tsc
 RUN npx tsc
 
-# Make sure the built CLI has proper permissions
-RUN chmod +x /app/dist/cli.js
-
 # Remove dev dependencies to reduce image size
 RUN npm prune --production
 
@@ -28,5 +25,5 @@ RUN useradd --create-home --shell /bin/bash nextjs
 # Switch to the non-root user
 USER nextjs
 
-# Set entrypoint to the CLI using absolute path
-ENTRYPOINT ["/app/dist/cli.js"]
+# Set entrypoint to run CLI with node
+ENTRYPOINT ["node", "/app/dist/cli.js"]
