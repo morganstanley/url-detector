@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Run URL Detector on source files
+      - name: Run URL Detector on source files (without fail-on-error)
         uses: ./ # Uses the action from this repository
         with:
           scan-patterns: "src/**/*"
@@ -21,7 +21,7 @@ jobs:
           include-comments: true
           quiet: true
           
-      - name: Test with example files
+      - name: Test with example files (without fail-on-error)
         uses: ./ # Test against example directory if it exists
         with:
           scan-patterns: "examples/**/*"
