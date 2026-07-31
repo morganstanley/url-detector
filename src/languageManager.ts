@@ -75,6 +75,15 @@ export class LanguageManager {
     /* eslint-enable prettier/prettier */
 
     /**
+     * A valid npm name segment (scope name or package name): starts and ends with
+     * an alphanumeric character, optionally with single `.`, `_`, or `-` separators
+     * between alphanumeric runs - matching npm's actual package-naming rules
+     * (which allow `.` and `_` outside the leading position), not just the hyphen-only
+     * convention most Tree-sitter grammar names happen to use.
+     */
+    private static readonly NPM_NAME_SEGMENT = '[a-z0-9]+(?:[._-][a-z0-9]+)*';
+
+    /**
      * Matches the naming convention used by installable Tree-sitter grammar
      * packages: an unscoped `tree-sitter-<name>` package, or a scoped
      * `@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
@@ -82,8 +91,10 @@ export class LanguageManager {
      * `require()`, so a config can only load an installed grammar package -
      * never an arbitrary file, relative, or absolute path.
      */
-    private static readonly APPROVED_MODULE_PATTERN =
-        /^(?:tree-sitter-[a-z0-9]+(?:-[a-z0-9]+)*|@[a-z0-9]+(?:-[a-z0-9]+)*\/tree-sitter-[a-z0-9]+(?:-[a-z0-9]+)*)$/;
+    private static readonly APPROVED_MODULE_PATTERN = new RegExp(
+        `^(?:tree-sitter-${LanguageManager.NPM_NAME_SEGMENT}` +
+            `|@${LanguageManager.NPM_NAME_SEGMENT}/tree-sitter-${LanguageManager.NPM_NAME_SEGMENT})$`,
+    );
 
     private languages: Map<string, unknown>;
     private languageConfigs: LanguageConfig[];

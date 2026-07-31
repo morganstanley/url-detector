@@ -94,6 +94,22 @@ describe('LanguageManager', () => {
             expect(warnings.some(w => w.includes('Failed to load'))).toBe(true);
         });
 
+        test('should allow scoped grammar packages using npm-valid dot or underscore in the scope name', () => {
+            const { logger, warnings } = captureWarnings();
+            const customLanguages: LanguageConfig[] = [
+                { name: 'foo', module: '@my.scope/tree-sitter-foo', extensions: ['.foo'] },
+                { name: 'bar', module: '@my_scope/tree-sitter-bar', extensions: ['.bar'] },
+            ];
+
+            new LanguageManager(logger, customLanguages);
+
+            // Neither package is installed, so loading fails - but at require(), not at the
+            // allowlist check. npm allows '.' and '_' in scope names outside the leading
+            // position, so these must not be rejected as "not an approved" module name.
+            expect(warnings.some(w => w.includes('not an approved'))).toBe(false);
+            expect(warnings.filter(w => w.includes('Failed to load'))).toHaveLength(2);
+        });
+
         test('addLanguage should skip a disallowed module and warn', () => {
             const { logger, warnings } = captureWarnings();
             const customManager = new LanguageManager(logger);
