@@ -73,6 +73,16 @@ describe('Path Sanitizer', () => {
             expect(sanitizeGlobPattern('C:../etc/passwd')).toBe('etc/passwd');
         });
 
+        it('should drop a trailing "/.." entirely rather than leaving a trailing separator', () => {
+            // A trailing separator changes what the pattern matches under fast-glob's
+            // onlyFiles: true (see urlDetector.ts), so "src/.." must fully collapse to
+            // "src", not "src/".
+            expect(sanitizeGlobPattern('src/..')).toBe('src');
+            expect(sanitizeGlobPattern('foo/bar/..')).toBe('foo/bar');
+            expect(sanitizeGlobPattern('a/../..')).toBe('a');
+            expect(sanitizeGlobPattern('src\\..')).toBe('src');
+        });
+
         it('should preserve safe glob patterns', () => {
             expect(sanitizeGlobPattern('**/*.js')).toBe('**/*.js');
             expect(sanitizeGlobPattern('src/**/*.{ts,js}')).toBe('src/**/*.{ts,js}');

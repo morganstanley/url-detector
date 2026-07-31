@@ -57,8 +57,13 @@ export function sanitizeGlobPattern(pattern: string): string {
 
         // Remove relative traversal segments: "../", a trailing "/..", or
         // a bare "..", each only when properly bounded by a path
-        // separator (or the start/end of the pattern).
-        result = result.replace(/(^|\/)\.\.(\/|$)/g, '$1');
+        // separator (or the start/end of the pattern). A trailing "/.."
+        // (preceded by a separator, with nothing after it) is dropped
+        // entirely rather than leaving the separator behind - there's no
+        // following segment left to join it to.
+        result = result.replace(/(^|\/)\.\.(\/|$)/g, (_match, before: string, after: string) =>
+            before === '/' && after === '' ? '' : before,
+        );
 
         // Strip glob-negation, drive-letter, and absolute-path prefixes so
         // the pattern can't escape the scan root regardless of fast-glob's
