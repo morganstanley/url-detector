@@ -13,27 +13,63 @@
  */
 
 /**
- * Sanitizes glob patterns to prevent path traversal attacks
+ * Decodes percent-encoded dot sequences (including doubly-encoded forms
+ * such as `%252e`) to a fixed point, so traversal removal below sees the
+ * same characters whether a pattern arrived literal or encoded.
+ */
+function decodeEncodedDots(pattern: string): string {
+    let result = pattern;
+    let previous: string;
+    do {
+        previous = result;
+        result = result.replace(/%2e/gi, '.').replace(/%252e/gi, '%2e');
+    } while (result !== previous);
+    return result;
+}
+
+/**
+ * Sanitizes glob patterns to keep them scoped to the intended scan root.
+ *
+ * Decodes percent-encoded traversal sequences, removes relative `../`
+ * segments, and strips leading glob-negation (`!`), drive-letter
+ * (`C:`), and absolute-path (`/`) prefixes so a sanitized pattern always
+ * resolves to a relative path regardless of the caller's `cwd`. Every step
+ * is re-applied in a fixed-point loop so that removing one prefix or
+ * sequence can't uncover another one underneath it.
+ *
  * @param pattern - The glob pattern to sanitize
  * @returns Sanitized glob pattern
  */
 export function sanitizeGlobPattern(pattern: string): string {
-    return (
-        pattern
-            // Normalize path separators to forward slashes
-            .replace(/\\/g, '/')
-            // Remove dangerous traversal sequences
-            .replace(/\.\.\/+/g, '')
-            .replace(/\/\.\.$/g, '')
-            .replace(/^\.\.$/g, '')
-            .replace(/^\.\.\/+/g, '')
-            // Remove null bytes and other control characters
-            // eslint-disable-next-line no-control-regex
-            .replace(/[\x00-\x1f\x7f]/g, '')
-            // Remove URL encoding attempts for path traversal
-            .replace(/%2e%2e/gi, '')
-            .replace(/%252e%252e/gi, '')
-    );
+    let result = pattern
+        // Normalize path separators to forward slashes
+        .replace(/\\/g, '/')
+        // Remove null bytes and other control characters
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\x00-\x1f\x7f]/g, '');
+
+    let previous: string;
+    do {
+        previous = result;
+
+        // Decode URL-encoded traversal attempts before stripping them.
+        result = decodeEncodedDots(result);
+
+        // Remove relative traversal segments: "../", a trailing "/..", or
+        // a bare "..", each only when properly bounded by a path
+        // separator (or the start/end of the pattern).
+        result = result.replace(/(^|\/)\.\.(\/|$)/g, '$1');
+
+        // Strip glob-negation, drive-letter, and absolute-path prefixes so
+        // the pattern can't escape the scan root regardless of fast-glob's
+        // cwd.
+        result = result
+            .replace(/^!+/, '')
+            .replace(/^[A-Za-z]:\/?/, '')
+            .replace(/^\/+/, '');
+    } while (result !== previous);
+
+    return result;
 }
 
 /**
