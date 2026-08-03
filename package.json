@@ -42,7 +42,7 @@
     "@tree-sitter-grammars/tree-sitter-xml": "^0.7.0",
     "@tree-sitter-grammars/tree-sitter-yaml": "^0.7.1",
     "cli-table3": "^0.6.0",
-    "commander": "^14.0.0",
+    "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "minimatch": "^10.0.3",
     "p-limit": "^3.1.0",
@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
-    "@types/node": "^25.1.0",
+    "@types/node": "^26.1.2",
     "@typescript-eslint/eslint-plugin": "^8.34.0",
     "@typescript-eslint/parser": "^8.34.0",
     "eslint": "^10.0.2",
