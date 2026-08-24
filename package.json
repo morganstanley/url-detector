@@ -1,10 +1,10 @@
 {
-  "name": "@morgan-stanley/url-detector",
-  "version": "0.1.0-beta.4",
+  "name": "@software-testing-professional/url-detector-sarif",
+  "version": "0.0.1",
 
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "description": "A command-line tool that scans source code and text files for URLs, detecting all discovered URLs",
+  "description": "A command-line tool that scans source code and text files for URLs, detecting all discovered URLs. Forked from morganstanley/url-detector. And modified to output SARIF format.",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -29,11 +29,11 @@
   "keywords": [
     "scanner"
   ],
-  "homepage": "https://github.com/morganstanley/url-detector",
-  "author": "Morgan Stanley",
+  "homepage": "https://github.com/software-testing-professional/url-detector-sarif",
+  "author": "software testing PROFESSIONAL",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/morganstanley/url-detector.git"
+    "url": "git+https://github.com/software-testing-professional/url-detector-sarif.git"
   },
   "license": "Apache-2.0",
   "dependencies": {
