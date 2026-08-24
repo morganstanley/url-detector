@@ -1,9 +1,9 @@
 # URL Detector
 
 ![Lifecycle Incubating](https://img.shields.io/badge/Lifecycle-Incubating-yellow)
-[![npm](https://img.shields.io/npm/v/@morgan-stanley/url-detector)](https://www.npmjs.com/package/@morgan-stanley/url-detector)
-[![CI](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/morganstanley/url-detector/actions/workflows/continuous-integration.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/morganstanley/url-detector/badge)](https://securityscorecards.dev/viewer/?uri=github.com/morganstanley/url-detector)
+[![npm](https://img.shields.io/npm/v/%40software-testing-professional%2Furl-detector-sarif)](https://www.npmjs.com/package/@software-testing-professional/url-detector-sarif)
+[![CI](https://github.com/software-testing-professional/url-detector-sarif/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/software-testing-professional/url-detector-sarif/actions/workflows/continuous-integration.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/software-testing-professional/url-detector-sarif/badge)](https://securityscorecards.dev/viewer/?uri=github.com/software-testing-professional/url-detector-sarif)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 A URL detection tool that scans files using Tree-sitter parsers for accurate URL discovery across 20+ programming languages. Instead of simple regex matching, this tool performs AST (Abstract Syntax Tree) parsing to precisely locate URLs in strings, comments, and other appropriate contexts.
@@ -41,24 +41,26 @@ These URLs represent real external dependencies that can impact security, availa
 
 ## Installation
 
+Requires Node.js 22.12 or newer.
+
 To suppress warnings from tree-sitter transitive dependencies, all these commands can be run optionally with --loglevel=error flag.
 
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g @morgan-stanley/url-detector
+npm install -g @software-testing-professional/url-detector-sarif
 ```
 
 ### Local Installation
 
 ```bash
-npm install @morgan-stanley/url-detector
+npm install @software-testing-professional/url-detector-sarif
 ```
 
 ### NPX Usage (No Installation)
 
 ```bash
-npx @morgan-stanley/url-detector --scan "src/**/*.js" --format table
+npx @software-testing-professional/url-detector-sarif --scan "src/**/*.js" --format table
 ```
 
 ## Quick Start
@@ -85,7 +87,7 @@ url-detector --scan "**/*.js" --fail-on-error --results-only
 ### Programmatic Usage
 
 ```typescript
-import { URLDetector, LanguageManager } from '@morgan-stanley/url-detector';
+import { URLDetector, LanguageManager } from '@software-testing-professional/url-detector-sarif';
 
 // Basic usage
 const detector = new URLDetector();
@@ -267,7 +269,7 @@ interface URLMatch {
 ### Language Customization
 
 ```typescript
-import { LanguageManager, LanguageConfig } from '@morgan-stanley/url-detector';
+import { LanguageManager, LanguageConfig } from '@software-testing-professional/url-detector-sarif';
 
 // Add custom language support
 const customLanguages: LanguageConfig[] = [

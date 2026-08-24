@@ -269,7 +269,7 @@ export class OutputFormatter {
                         driver: {
                             name: packageJson.name,
                             version: packageJson.version,
-                            informationUri: 'https://github.com/morganstanley/url-detector',
+                            informationUri: packageJson.homepage,
                             rules: [
                                 {
                                     id: 'url-detected',
@@ -277,7 +277,7 @@ export class OutputFormatter {
                                     shortDescription: {
                                         text: 'URL detected in source file',
                                     },
-                                    helpUri: 'https://github.com/morganstanley/url-detector',
+                                    helpUri: packageJson.homepage,
                                 },
                             ],
                         },

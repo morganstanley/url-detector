@@ -33,10 +33,13 @@ describe('Documentation Sync Tests', () => {
             // Find all table rows in CLI Options section
             const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && 
-                        line.includes('--') && 
-                        !line.includes('Option') && 
-                        !line.includes('----------'));
+                .filter(
+                    line =>
+                        line.trim().startsWith('|') &&
+                        line.includes('--') &&
+                        !line.includes('Option') &&
+                        !line.includes('----------'),
+                );
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {
@@ -104,10 +107,13 @@ describe('Documentation Sync Tests', () => {
             // Find all table rows in CLI Options section
             const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && 
-                        line.includes('--') && 
-                        !line.includes('Option') && 
-                        !line.includes('----------'));
+                .filter(
+                    line =>
+                        line.trim().startsWith('|') &&
+                        line.includes('--') &&
+                        !line.includes('Option') &&
+                        !line.includes('----------'),
+                );
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {

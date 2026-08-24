@@ -28,7 +28,7 @@ export function sanitizeGlobPattern(pattern: string): string {
             .replace(/^\.\.$/g, '')
             .replace(/^\.\.\/+/g, '')
             // Remove null bytes and other control characters
-            // eslint-disable-next-line no-control-regex
+
             .replace(/[\x00-\x1f\x7f]/g, '')
             // Remove URL encoding attempts for path traversal
             .replace(/%2e%2e/gi, '')

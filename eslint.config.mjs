@@ -1,21 +1,9 @@
 import { defineConfig } from 'eslint/config';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
-import tsParser from '@typescript-eslint/parser';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
 import licenseHeader from 'eslint-plugin-license-header';
 import prettier from 'eslint-plugin-prettier';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all,
-});
 
 // Define the license header
 const LICENSE_HEADER = [
@@ -39,10 +27,24 @@ export default defineConfig([
         ignores: ['node_modules', 'dist', 'examples', 'coverage'],
     },
     {
-        extends: compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'),
-
+        ...js.configs.recommended,
+        files: ['**/*.{js,cjs,mjs}'],
+        languageOptions: {
+            ...js.configs.recommended.languageOptions,
+            globals: {
+                ...globals.node,
+            },
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+        },
+    },
+    ...typescriptEslint.configs['flat/recommended'].map(config => ({
+        ...config,
+        files: config.files ?? ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'],
+    })),
+    {
+        files: ['**/*.{js,cjs,mjs,ts}'],
         plugins: {
-            '@typescript-eslint': typescriptEslint,
             prettier: prettier,
         },
 
@@ -50,8 +52,6 @@ export default defineConfig([
             globals: {
                 ...globals.node,
             },
-
-            parser: tsParser,
             ecmaVersion: 'latest',
             sourceType: 'module',
         },
@@ -70,8 +70,24 @@ export default defineConfig([
             ],
             // Prevent console usage in all code by default
             'no-console': 'error',
-            // Catch unused variables
-            '@typescript-eslint/no-unused-vars': 'error',
+        },
+    },
+    {
+        files: ['scripts/**/*.js'],
+        rules: {
+            'no-console': 'off',
+        },
+    },
+    {
+        files: ['src/cli.ts', 'src/outputFormatter.ts', 'tests/pkg-config-validation.test.ts'],
+        rules: {
+            '@typescript-eslint/no-require-imports': 'off',
+        },
+    },
+    {
+        files: ['tests/**/*.ts'],
+        rules: {
+            '@typescript-eslint/ban-ts-comment': 'off',
         },
     },
     // Add license header check for TypeScript files
