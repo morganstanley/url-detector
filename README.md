@@ -31,7 +31,7 @@ These URLs represent real external dependencies that can impact security, availa
 - **🌐 Common Language Support**: JavaScript, TypeScript, Java, C/C++, C#, HTML, CSS, Python, PHP, Ruby, Go, Scala, JSON, XML, TOML, Bash, Kotlin, and more
 - **🌳 AST-Based Parsing**: Uses Tree-sitter for accurate tokenization and context-aware URL detection
 - **🚀 High Performance**: Concurrent file processing with configurable concurrency limits
-- **📊 Multiple Output Formats**: Table, JSON, and CSV output with customizable formatting
+- **📊 Multiple Output Formats**: Table, JSON, CSV, and SARIF output with customizable formatting
 - **🎯 Advanced Filtering**: Domain allowlists/blocklists with wildcard support, protocol filtering, and regex fallback
 - **📍 Precise Location Tracking**: Line numbers, columns, and character positions for each URL
 - **🔍 Context Detection**: Finds URLs in string literals, comments, and appropriate language constructs
@@ -121,7 +121,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `-i, --ignore-domains <domains...>` | Additional domains to ignore (supports wildcards, always includes `www.w3.org`) | `[]` |
 | `--include-comments` | Also scan commented-out lines for URLs | `false` |
 | `--include-non-fqdn` | Include non-fully qualified domain names like "localhost" | `false` |
-| `-f, --format <format>` | Output format: `table`, `json`, or `csv` | `"table"` |
+| `-f, --format <format>` | Output format: `table`, `json`, `csv`, or `sarif` | `"table"` |
 | `-o, --output <file>` | Output file path (stdout if not specified) | `null` |
 | `-q, --quiet` | Run in quiet mode with no console output | `false` |
 | `--results-only` | Show only results, suppressing progress and info messages | `false` |
@@ -232,7 +232,7 @@ interface DetectorOptionsConfig {
     includeNonFqdn?: boolean;         // Include non-FQDN domains like "localhost" (default: false)
     
     // Output options  
-    format?: 'table' | 'json' | 'csv'; // Output format (default: "table")
+    format?: 'table' | 'json' | 'csv' | 'sarif'; // Output format (default: "table")
     output?: string | null;           // Output file path (default: null)
     
     // Control options
@@ -324,7 +324,7 @@ src/
 ├── urlDetector.ts       # Core URL detection logic
 ├── languageManager.ts   # Language/parser management
 ├── urlFilter.ts         # URL filtering and validation
-├── outputFormatter.ts   # Output formatting (table/json/csv)
+├── outputFormatter.ts   # Output formatting (table/json/csv/sarif)
 ├── options.ts          # Configuration options
 └── logger.ts           # Logging interfaces
 
