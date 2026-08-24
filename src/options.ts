@@ -17,7 +17,7 @@ import * as fs from 'fs';
 /**
  * Supported output formats for URL detection results
  */
-export type OutputFormat = 'table' | 'json' | 'csv';
+export type OutputFormat = 'table' | 'json' | 'csv' | 'sarif';
 
 /**
  * Configuration interface for URL detector options.
@@ -152,7 +152,7 @@ export class DetectorOptions {
     }
 
     private validateOptions(): void {
-        const validOutputFormats: OutputFormat[] = ['json', 'csv', 'table'];
+        const validOutputFormats: OutputFormat[] = ['json', 'csv', 'table', 'sarif'];
         if (!validOutputFormats.includes(this.format)) {
             throw new Error(`Invalid output format: ${this.format}. Valid formats: ${validOutputFormats.join(', ')}`);
         }

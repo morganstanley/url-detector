@@ -14,6 +14,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { execSync } from 'child_process';
 import Table from 'cli-table3';
 import { Logger, NullLogger } from './logger';
 import { FileResult } from './urlDetector';
@@ -87,6 +88,9 @@ export class OutputFormatter {
                     output = this.formatTable(results);
                     break;
 
+                case 'sarif':
+                    output = this.formatSarif(results);
+                    break;
                 default:
                     throw new Error(`Unknown output format: ${format}`);
             }
@@ -193,6 +197,98 @@ export class OutputFormatter {
         }
 
         return table.toString();
+    }
+
+    private getGitRemoteUrl(): string | undefined {
+        try {
+            return execSync('git remote get-url origin', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+        } catch {
+            return undefined;
+        }
+    }
+
+    private formatSarif(results: FileResult[]): string {
+        const packageJson = require('../package.json');
+        const remoteUrl = this.getGitRemoteUrl();
+
+        const artifacts: object[] = [];
+        if (remoteUrl) {
+            artifacts.push({
+                location: {
+                    uri: remoteUrl,
+                },
+                roles: ['analysisTarget'],
+            });
+        }
+
+        const sarifResults = results.map(result => {
+            const fileUri = result.file.startsWith('/')
+                ? `file://${result.file}`
+                : `file:///${result.file.replace(/\\/g, '/')}`;
+
+            return {
+                ruleId: 'url-detected',
+                message: {
+                    text: `Found ${result.urls.length} URL(s) in file`,
+                },
+                locations: [
+                    {
+                        physicalLocation: {
+                            artifactLocation: {
+                                uri: fileUri,
+                            },
+                            region: {
+                                startLine: result.urls[0]?.line ?? 1,
+                                startColumn: result.urls[0]?.column ?? 1,
+                            },
+                        },
+                    },
+                ],
+                relatedLocations: result.urls.map((urlObj, index) => ({
+                    id: index,
+                    message: { text: urlObj.url },
+                    physicalLocation: {
+                        artifactLocation: {
+                            uri: fileUri,
+                        },
+                        region: {
+                            startLine: urlObj.line ?? 1,
+                            startColumn: urlObj.column ?? 1,
+                        },
+                    },
+                })),
+            };
+        });
+
+        const sarif = {
+            $schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+            version: '2.1.0',
+            runs: [
+                {
+                    tool: {
+                        driver: {
+                            name: packageJson.name,
+                            version: packageJson.version,
+                            informationUri: 'https://github.com/morganstanley/url-detector',
+                            rules: [
+                                {
+                                    id: 'url-detected',
+                                    name: 'UrlDetected',
+                                    shortDescription: {
+                                        text: 'URL detected in source file',
+                                    },
+                                    helpUri: 'https://github.com/morganstanley/url-detector',
+                                },
+                            ],
+                        },
+                    },
+                    artifacts: artifacts.length > 0 ? artifacts : undefined,
+                    results: sarifResults,
+                },
+            ],
+        };
+
+        return JSON.stringify(sarif, null, 2);
     }
 
     private getUniqueUrls(results: FileResult[]): string[] {
