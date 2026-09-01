@@ -54,6 +54,9 @@ export interface DetectorOptionsConfig {
 
     /** Number of context lines to include around detected URLs (default: 0) */
     context?: number;
+
+    /**Whether to use a validator function to validate the url */
+    validate?: boolean
 }
 
 /**
@@ -93,6 +96,7 @@ export class DetectorOptions {
     public fallbackRegex: boolean;
 
     public context: number;
+    public validate: boolean
 
     /**
      * Creates a new DetectorOptions instance with the provided configuration.
@@ -147,7 +151,7 @@ export class DetectorOptions {
         this.fallbackRegex = options.fallbackRegex !== false;
 
         this.context = options.context || 0;
-
+        this.validate = options.validate || false;
         this.validateOptions();
     }
 
