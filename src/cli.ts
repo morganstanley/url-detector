@@ -18,7 +18,7 @@ import { Command } from 'commander';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { URLDetector } from './urlDetector.js';
-import { OutputFormat, DetectorOptionsConfig } from './options.js';
+import { OutputFormat, DetectorOptionsConfig, loadPatternsFromFile } from './options.js';
 import { loadConfig } from './configLoader.js';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
 import { OutputFormatter } from './outputFormatter.js';
@@ -52,6 +52,7 @@ program
         '--stdin-language <language>',
         'Language for stdin input (e.g., javascript). When set, reads content from stdin instead of scanning files',
     )
+    .option('--ignore-domains-file <file>', 'File containing domain patterns to ignore (one per line)')
     .action(async options => {
         // Load the configuration file first. It provides the base options; any command-line
         // flag the user explicitly provides overrides it, and DetectorOptions supplies the
@@ -125,6 +126,14 @@ program
                 }
             }
 
+            // Domain patterns from --ignore-domains-file append to --ignore-domains. Unlike the
+            // scan/exclude pattern files, they also apply in stdin mode, since ignoring domains
+            // is about which URLs get reported, not which files get read.
+            if (options.ignoreDomainsFile) {
+                const fileIgnoreDomainPatterns = await loadPatternsFromFile(options.ignoreDomainsFile as string);
+                cliOverrides.ignoreDomains = [...(cliOverrides.ignoreDomains || []), ...fileIgnoreDomainPatterns];
+            }
+
             const effectiveOptions: DetectorOptionsConfig = { ...config, ...cliOverrides };
 
             if (configSource) {
@@ -180,14 +189,6 @@ program
             process.exit(1);
         }
     });
-
-async function loadPatternsFromFile(filePath: string): Promise<string[]> {
-    const content = await fs.promises.readFile(filePath, 'utf8');
-    return content
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith('#'));
-}
 
 // Only run if this file is executed directly (not imported as a library).
 const isMainModule = (() => {

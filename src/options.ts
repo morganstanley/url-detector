@@ -202,33 +202,50 @@ export class DetectorOptions {
     }
 
     /**
-     * Loads file patterns from a text file.
-     *
-     * Reads a file containing patterns (one per line) and returns them as an array.
-     * Lines starting with '#' are treated as comments and ignored. Empty lines
-     * and whitespace-only lines are also filtered out.
+     * Loads patterns from a text file. Delegates to the module-level
+     * {@link loadPatternsFromFile}; see it for the file format.
      *
      * @param filePath Path to the file containing patterns
      * @returns Promise resolving to array of pattern strings
      * @throws {Error} When file cannot be read or accessed
-     *
-     * @example
-     * ```typescript
-     * // File content example:
-     * // # Scan patterns
-     * // src/components
-     * // src/utils
-     * // # Empty lines and comments are ignored
-     *
-     * const patterns = await options.loadPatternsFromFile('scan-patterns.txt');
-     * // Returns: ['src/components', 'src/utils']
-     * ```
      */
     async loadPatternsFromFile(filePath: string): Promise<string[]> {
-        const content = await fs.promises.readFile(filePath, 'utf8');
-        return content
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0 && !line.startsWith('#'));
+        return loadPatternsFromFile(filePath);
     }
+}
+
+/**
+ * Loads patterns from a text file, one pattern per line.
+ *
+ * This is the single implementation behind `--scan-file`, `--exclude-file`, and
+ * `--ignore-domains-file` (and {@link DetectorOptions.loadPatternsFromFile}).
+ *
+ * - Lines starting with `#` are comments and are ignored.
+ * - A `#` preceded by whitespace starts a trailing comment, which is stripped
+ *   (`api.corp.com  # legacy` yields `api.corp.com`). A `#` with no whitespace
+ *   before it is kept as part of the pattern.
+ * - Surrounding whitespace is trimmed, and empty lines are ignored.
+ * - Both LF and CRLF line endings are accepted.
+ *
+ * @param filePath Path to the file containing patterns
+ * @returns Promise resolving to array of pattern strings
+ * @throws {Error} When file cannot be read or accessed
+ *
+ * @example
+ * ```typescript
+ * // File content:
+ * // # Internal domains
+ * // *.mycompany.com
+ * // api.corp.com   # legacy
+ *
+ * const patterns = await loadPatternsFromFile('ignored-domains.txt');
+ * // Returns: ['*.mycompany.com', 'api.corp.com']
+ * ```
+ */
+export async function loadPatternsFromFile(filePath: string): Promise<string[]> {
+    const content = await fs.promises.readFile(filePath, 'utf8');
+    return content
+        .split(/\r?\n/)
+        .map(line => line.replace(/(^|\s)#.*$/, '').trim())
+        .filter(line => line.length > 0);
 }

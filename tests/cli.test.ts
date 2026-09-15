@@ -297,6 +297,98 @@ describe('CLI', () => {
         expect(content).toContain('api.example.com');
     });
 
+    test('loads ignore-domain patterns from an ignore-domains-file', async () => {
+        // sample.js contains https://api.example.com/v1/users. An ignore-domains-file that
+        // lists *.example.com (alongside comments and blank lines) must suppress it.
+        const ignoreFile = path.join(tmpDir, 'ignored-domains.txt');
+        await fs.promises.writeFile(ignoreFile, '# Internal domains\n*.example.com\n\n# Development\nlocalhost\n');
+        const outFile = path.join(tmpDir, 'out.json');
+
+        await program.parseAsync([
+            'node',
+            'url-detector',
+            '--scan',
+            'sample.js',
+            '--ignore-domains-file',
+            ignoreFile,
+            '--format',
+            'json',
+            '--output',
+            outFile,
+            '--quiet',
+        ]);
+
+        // Every URL was ignored, so the no-URL path runs and no results file is written.
+        await expect(fs.promises.access(outFile)).rejects.toThrow();
+    });
+
+    test('appends ignore-domains-file patterns to --ignore-domains', async () => {
+        // Each source ignores one of the two URLs; together they ignore both, leaving only
+        // the third. This proves the file patterns are merged with, not replacing, the flag,
+        // and that a trailing `# comment` after a pattern is stripped rather than kept.
+        await fs.promises.writeFile(
+            path.join(tmpDir, 'multi.js'),
+            [
+                'const a = "https://api.example.com/v1";',
+                'const b = "https://tools.internal.net/x";',
+                'const c = "https://public.example.org/docs";',
+            ].join('\n'),
+        );
+        const ignoreFile = path.join(tmpDir, 'ignored-domains.txt');
+        await fs.promises.writeFile(ignoreFile, '*.internal.net # VPN tools (trailing comment)\n');
+        const outFile = path.join(tmpDir, 'out.json');
+
+        await program.parseAsync([
+            'node',
+            'url-detector',
+            '--scan',
+            'multi.js',
+            '--ignore-domains',
+            '*.example.com',
+            '--ignore-domains-file',
+            ignoreFile,
+            '--format',
+            'json',
+            '--output',
+            outFile,
+            '--quiet',
+        ]);
+
+        const content = await fs.promises.readFile(outFile, 'utf8');
+        expect(content).toContain('public.example.org');
+        expect(content).not.toContain('api.example.com');
+        expect(content).not.toContain('tools.internal.net');
+    });
+
+    test('applies ignore-domains-file patterns in stdin mode', async () => {
+        stdinMock.content = 'const a = "https://api.example.com/v1";\nconst b = "https://keep.example.org/x";';
+        try {
+            const ignoreFile = path.join(tmpDir, 'ignored-domains.txt');
+            await fs.promises.writeFile(ignoreFile, '*.example.com\n');
+            const outFile = path.join(tmpDir, 'out.json');
+
+            await program.parseAsync([
+                'node',
+                'url-detector',
+                '--stdin-language',
+                'javascript',
+                '--ignore-domains-file',
+                ignoreFile,
+                '--format',
+                'json',
+                '--output',
+                outFile,
+                '--quiet',
+            ]);
+
+            const content = await fs.promises.readFile(outFile, 'utf8');
+            expect(content).toContain('keep.example.org');
+            expect(content).not.toContain('api.example.com');
+        } finally {
+            stdinMock.content = '';
+        }
+    });
+
     test('warns about unknown keys in a discovered configuration file', async () => {
         // A configuration file with an unknown key still loads: the known key (format)
         // applies and the unknown key is surfaced as a warning rather than an error.
