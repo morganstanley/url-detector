@@ -129,6 +129,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--concurrency <number>` | Maximum number of files to scan concurrently | `10` |
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
+| `--ignore-domains-file <file>` | File containing domain patterns to ignore (one per line, comments with `#` supported) | `null` |
 
 ## Supported Languages
 
@@ -178,6 +179,9 @@ url-detector --ignore-domains "*.example.com"
 
 # Ignore multiple domain patterns
 url-detector --ignore-domains "*.example.com" "localhost" "*.local"
+
+# Ignore domains listed in a file (one pattern per line; # comments are skipped)
+url-detector --ignore-domains-file allowlist.txt
 ```
 
 ### Output Formats
