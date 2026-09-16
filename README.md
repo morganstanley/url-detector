@@ -125,10 +125,20 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `-o, --output <file>` | Output file path (stdout if not specified) | `null` |
 | `-q, --quiet` | Run in quiet mode with no console output | `false` |
 | `--results-only` | Show only results, suppressing progress and info messages | `false` |
-| `--fail-on-error` | Exit with non-zero code if any URLs are found | `false` |
+| `--fail-on-error` | Exit with code 1 if any URLs are found | `false` |
 | `--concurrency <number>` | Maximum number of files to scan concurrently | `10` |
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success, no URLs found |
+| `1` | URLs found (when fail-on-error is set) |
+| `2` | Configuration error (invalid options or values) |
+| `3` | File read error (missing or unreadable file) |
+| `4` | Parse error threshold exceeded |
 
 ## Supported Languages
 
@@ -196,7 +206,7 @@ url-detector --scan "src/**/*" --format csv --output urls.csv
 ### CI/CD Integration
 
 ```bash
-# Fail build if any URLs are found
+# Fail build if any URLs are found (exit 1). Operational failures use 2–4.
 url-detector --scan "**/*" --exclude "**/node_modules" --fail-on-error
 
 # Quiet mode for CI logs
