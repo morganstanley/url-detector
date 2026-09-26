@@ -282,6 +282,13 @@ const customLanguages: LanguageConfig[] = [
 const languageManager = new LanguageManager(undefined, customLanguages);
 ```
 
+`module` must be the package name of an installed Tree-sitter grammar, following the
+standard naming convention: an unscoped `tree-sitter-<name>` package, or a scoped
+`@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
+`LanguageManager` validates `module` against this convention before loading it; any
+other value (a file path, a non-grammar package name, etc.) is skipped with a warning
+instead of being loaded.
+
 ## How It Works
 
 1. **Language Detection**: Automatically detects programming language from file extension or filename
