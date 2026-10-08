@@ -46,6 +46,8 @@ export interface DetectorOptionsConfig {
     failOnError?: boolean;
     /** Number of concurrent file processing operations (default: 10) */
     concurrency?: number;
+    /** Number of bytes to read from each file at a time (default: 1 MiB) */
+    chunkSize?: number;
 
     /** Maximum directory depth to scan (default: Infinity) */
     maxDepth?: number;
@@ -85,6 +87,7 @@ export class DetectorOptions {
     public resultsOnly: boolean;
     public failOnError: boolean;
     public concurrency: number;
+    public chunkSize: number;
 
     public maxDepth: number;
     public withLineNumbers: boolean;
@@ -137,6 +140,7 @@ export class DetectorOptions {
 
         // Performance options
         this.concurrency = options.concurrency ?? 10;
+        this.chunkSize = options.chunkSize ?? 1024 * 1024;
 
         // Internal options (maintain compatibility with existing code)
 
@@ -163,6 +167,10 @@ export class DetectorOptions {
 
         if (this.concurrency < 1) {
             throw new Error('Concurrency must be >= 1');
+        }
+
+        if (!Number.isInteger(this.chunkSize) || this.chunkSize < 1) {
+            throw new Error('Chunk size must be a positive integer');
         }
     }
 

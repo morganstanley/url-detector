@@ -320,6 +320,14 @@ describe('URLDetector', () => {
                 new URLDetector({ concurrency: -1 });
             }).toThrow('Concurrency must be >= 1');
         });
+
+        test('should configure and validate chunk size', () => {
+            expect(new URLDetector({ chunkSize: 4096 }).getOptions.chunkSize).toBe(4096);
+            expect(new URLDetector().getOptions.chunkSize).toBe(1024 * 1024);
+
+            expect(() => new URLDetector({ chunkSize: 0 })).toThrow('Chunk size must be a positive integer');
+            expect(() => new URLDetector({ chunkSize: 1.5 })).toThrow('Chunk size must be a positive integer');
+        });
     });
 
     describe('Edge cases', () => {

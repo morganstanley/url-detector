@@ -439,7 +439,7 @@ export class URLDetector {
 
     private fallbackDetection(sourceCode: string, filePath: string): URLMatch[] {
         const urls: URLMatch[] = [];
-        const sourceLines = sourceCode.split('\n');
+        const sourceLines = this.options.context > 0 ? sourceCode.split('\n') : [];
         let match: RegExpExecArray | null;
 
         while ((match = this.urlPattern.exec(sourceCode)) !== null) {
@@ -502,10 +502,64 @@ export class URLDetector {
 
     private async processFile(filePath: string): Promise<FileResult | null> {
         try {
-            const content: string = await fs.promises.readFile(filePath, 'utf8');
             const language = this.languageManager.detectLanguageFromPath(filePath);
-            const urls = await this.detectURLs(content, language, filePath);
-            const filteredUrls = this.urlFilter.filterUrls(urls);
+            const urlsByPosition = new Map<string, URLMatch>();
+            const stream = fs.createReadStream(filePath, {
+                encoding: 'utf8',
+                highWaterMark: this.options.chunkSize,
+            });
+            let carry = '';
+            let baseOffset = 0;
+            let baseLine = 1;
+            let baseColumn = 1;
+
+            const processWindow = async (content: string, isFinal: boolean): Promise<void> => {
+                const urls = await this.detectURLs(content, language, filePath);
+                for (const url of urls) {
+                    if (!isFinal && url.end === content.length) {
+                        continue;
+                    }
+
+                    const start = baseOffset + url.start;
+                    const end = baseOffset + url.end;
+                    const line = baseLine + url.line - 1;
+                    const column = url.line === 1 ? baseColumn + url.column - 1 : url.column;
+                    urlsByPosition.set(`${start}:${end}`, { ...url, start, end, line, column });
+                }
+            };
+
+            for await (const chunk of stream) {
+                const content = carry + chunk;
+                await processWindow(content, false);
+
+                let carryStart = Math.max(0, content.length - 8 * 1024);
+                let match: RegExpExecArray | null;
+                this.urlPattern.lastIndex = 0;
+                while ((match = this.urlPattern.exec(content)) !== null) {
+                    if (match.index + match[0].length === content.length) {
+                        carryStart = Math.min(carryStart, match.index);
+                    }
+                }
+                this.urlPattern.lastIndex = 0;
+
+                const discarded = content.slice(0, carryStart);
+                const lastNewline = discarded.lastIndexOf('\n');
+                baseOffset += discarded.length;
+                if (lastNewline >= 0) {
+                    baseLine += discarded.split('\n').length - 1;
+                    baseColumn = discarded.length - lastNewline;
+                } else {
+                    baseColumn += discarded.length;
+                }
+                const nextCarry = content.slice(carryStart);
+                carry = Buffer.from(nextCarry, 'utf8').toString('utf8');
+            }
+
+            if (carry.length > 0) {
+                await processWindow(carry, true);
+            }
+
+            const filteredUrls = this.urlFilter.filterUrls(Array.from(urlsByPosition.values()));
 
             return {
                 file: filePath,
