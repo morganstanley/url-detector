@@ -1,0 +1,29 @@
+name: Test URL Detector Action
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run URL Detector on source files (without fail-on-error)
+        uses: ./ # Uses the action from this repository
+        with:
+          scan-patterns: "src/**/*"
+          format: "table"
+          include-comments: true
+          quiet: true
+          
+      - name: Test with example files (without fail-on-error)
+        uses: ./ # Test against example directory if it exists
+        with:
+          scan-patterns: "examples/**/*"
+          format: "json"
+          output-file: "scan-results.json"
