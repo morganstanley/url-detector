@@ -460,4 +460,30 @@ const url2 = "https://example.com";`;
             expect(urls[0].end).not.toBe(urls[1].end);
         });
     });
+
+    describe('Control character stripping', () => {
+        test('should truncate a URL match at an ESC-sequence payload', async () => {
+            // eslint-disable-next-line no-control-regex
+            const code = `const url = "https://example.com/\x1b[31mfake\x1b[0m";`;
+            const urls = await detector.detectURLs(code, 'javascript');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            // The control byte ends the match entirely, so nothing after it (including
+            // the ESC sequence's payload) is ever captured as part of the URL.
+            expect(urls[0].url).toBe('https://example.com/');
+        });
+
+        test('should stop a fallback-regex match at a control byte', async () => {
+            // eslint-disable-next-line no-control-regex
+            const code = `# Perl comment: http://example.com/path\x00../../etc/passwd`;
+            const urls = await detector.detectURLs(code, 'perl');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            expect(urls[0].url).toBe('http://example.com/path');
+        });
+    });
 });
