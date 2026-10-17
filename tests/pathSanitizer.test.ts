@@ -41,9 +41,46 @@ describe('Path Sanitizer', () => {
         });
 
         it('should remove URL-encoded path traversal attempts', () => {
-            expect(sanitizeGlobPattern('%2e%2e/etc/*')).toBe('/etc/*');
-            expect(sanitizeGlobPattern('%252e%252e/config/*')).toBe('/config/*');
-            expect(sanitizeGlobPattern('src/%2E%2E/secret')).toBe('src//secret');
+            expect(sanitizeGlobPattern('%2e%2e/etc/*')).toBe('etc/*');
+            expect(sanitizeGlobPattern('%252e%252e/config/*')).toBe('config/*');
+            expect(sanitizeGlobPattern('src/%2E%2E/secret')).toBe('src/secret');
+        });
+
+        it('should decode doubly-encoded traversal sequences to the same result as single-encoded ones', () => {
+            expect(sanitizeGlobPattern('%2e%2e/%2e%2e/etc/shadow')).toBe('etc/shadow');
+            expect(sanitizeGlobPattern('%252e%252e/%252e%252e/etc/shadow')).toBe('etc/shadow');
+        });
+
+        it('should reject absolute paths', () => {
+            expect(sanitizeGlobPattern('/etc/passwd')).toBe('etc/passwd');
+            expect(sanitizeGlobPattern('//etc/passwd')).toBe('etc/passwd');
+        });
+
+        it('should reject Windows drive-letter prefixes', () => {
+            expect(sanitizeGlobPattern('C:/Windows/System32/*')).toBe('Windows/System32/*');
+            expect(sanitizeGlobPattern('c:\\Windows\\System32\\*')).toBe('Windows/System32/*');
+            expect(sanitizeGlobPattern('D:secret/*')).toBe('secret/*');
+        });
+
+        it('should reject leading glob-negation prefixes', () => {
+            expect(sanitizeGlobPattern('!secret/**')).toBe('secret/**');
+            expect(sanitizeGlobPattern('!!secret/**')).toBe('secret/**');
+        });
+
+        it('should reject combined absolute/negation/traversal/encoding prefixes', () => {
+            expect(sanitizeGlobPattern('!/../../etc/passwd')).toBe('etc/passwd');
+            expect(sanitizeGlobPattern('!C:/../Windows/*')).toBe('Windows/*');
+            expect(sanitizeGlobPattern('C:../etc/passwd')).toBe('etc/passwd');
+        });
+
+        it('should drop a trailing "/.." entirely rather than leaving a trailing separator', () => {
+            // A trailing separator changes what the pattern matches under fast-glob's
+            // onlyFiles: true (see urlDetector.ts), so "src/.." must fully collapse to
+            // "src", not "src/".
+            expect(sanitizeGlobPattern('src/..')).toBe('src');
+            expect(sanitizeGlobPattern('foo/bar/..')).toBe('foo/bar');
+            expect(sanitizeGlobPattern('a/../..')).toBe('a');
+            expect(sanitizeGlobPattern('src\\..')).toBe('src');
         });
 
         it('should preserve safe glob patterns', () => {
@@ -110,9 +147,26 @@ describe('Path Sanitizer', () => {
             const pattern = 'safe/path\x00../../../etc/passwd';
             const sanitized = sanitizeGlobPattern(pattern);
 
-            expect(sanitized).toBe('safe/pathetc/passwd');
             expect(sanitized).not.toContain('\x00');
-            expect(sanitized).not.toMatch(/\.\./);
+            // The null byte is stripped before segment boundaries are considered, so the
+            // first ".." fuses onto "path" as a literal (inert) segment name rather than
+            // a real traversal segment. The two properly-bounded segments after it are
+            // still removed, and no exploitable "../" remains.
+            expect(sanitized).toBe('safe/path../etc/passwd');
+            expect(sanitized).not.toMatch(/(^|\/)\.\.(\/|$)/);
+        });
+
+        it('should reject absolute, drive-letter, and negation prefixes even when combined with traversal', () => {
+            const maliciousPatterns = ['/etc/passwd', 'C:/Windows/System32/*', '!secret/**', '!/../../etc/passwd'];
+
+            const sanitized = sanitizeGlobPatterns(maliciousPatterns);
+
+            sanitized.forEach(pattern => {
+                expect(pattern).not.toMatch(/^\//);
+                expect(pattern).not.toMatch(/^[A-Za-z]:/);
+                expect(pattern).not.toMatch(/^!/);
+                expect(pattern).not.toMatch(/(^|\/)\.\.(\/|$)/);
+            });
         });
     });
 });
