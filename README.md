@@ -41,6 +41,8 @@ These URLs represent real external dependencies that can impact security, availa
 
 ## Installation
 
+**Requires Node.js 20 or later.**
+
 To suppress warnings from tree-sitter transitive dependencies, all these commands can be run optionally with --loglevel=error flag.
 
 ### Global Installation (Recommended)
