@@ -129,6 +129,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--concurrency <number>` | Maximum number of files to scan concurrently | `10` |
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
+| `--validate` | Validate discovered URLs |  `false`|
 
 ## Supported Languages
 
@@ -247,6 +248,7 @@ interface DetectorOptionsConfig {
     context?: number;                 // Lines of context to include (default: 0)
     maxDepth?: number;                // Max directory depth (default: Infinity)
     quiet?: boolean;                  // Suppress informational output (default: false)
+    validate?: boolean;               // Validate a discovered URL (default: false)
 }
 ```
 
@@ -327,11 +329,13 @@ src/
 ├── outputFormatter.ts   # Output formatting (table/json/csv)
 ├── options.ts          # Configuration options
 └── logger.ts           # Logging interfaces
+└── urlValidator.ts     # Validate URL
 
 tests/
 ├── urlDetector.test.ts
 ├── languageManager.test.ts
 └── integration.test.ts
+└── urlValidator.test.ts
 ```
 
 ### Local Development Setup

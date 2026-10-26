@@ -41,6 +41,7 @@ program
     .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt, 10)
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
+    .option('--validate', 'Validate the input url')
     .action(async options => {
         // Create appropriate logger based on CLI options
         let logger;
@@ -81,6 +82,7 @@ program
                     resultsOnly: options.resultsOnly as boolean,
                     failOnError: options.failOnError as boolean,
                     concurrency: options.concurrency as number,
+                    validate: options.validate as boolean
                 },
                 logger,
             );

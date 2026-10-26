@@ -22,6 +22,7 @@ import { URLFilter, URLMatch } from './urlFilter';
 import pLimit from 'p-limit';
 import { sanitizeGlobPatterns } from './pathSanitizer';
 import { Logger, NullLogger } from './logger';
+import { UrlValidator } from './urlValidator';
 
 /**
  * Result data for a single file scan
@@ -84,7 +85,6 @@ export class URLDetector {
     private urlPattern: RegExp;
     private commonSchemaPatterns: RegExp[];
     private urlFilter: URLFilter;
-
     private logger: Logger;
 
     /**
