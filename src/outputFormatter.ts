@@ -207,10 +207,30 @@ export class OutputFormatter {
         return Array.from(urls);
     }
 
-    private escapeCsv(value: string | number): string {
-        const strValue = typeof value === 'string' ? value : value.toString();
+    /**
+     * Prefixes a cell value with a single quote if it starts with a character that
+     * spreadsheet applications (Excel, LibreOffice, Google Sheets) interpret as the
+     * start of a formula. This keeps scanned filenames and URLs from being evaluated
+     * as formulas when the CSV output is opened in a spreadsheet.
+     */
+    private neutralizeFormula(value: string): string {
+        if (/^[=+\-@\t\r]/.test(value)) {
+            return `'${value}`;
+        }
 
-        if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
+        return value;
+    }
+
+    private escapeCsv(value: string | number): string {
+        const strValue = this.neutralizeFormula(typeof value === 'string' ? value : value.toString());
+
+        if (
+            strValue.includes(',') ||
+            strValue.includes('"') ||
+            strValue.includes('\n') ||
+            strValue.includes('\t') ||
+            strValue.includes('\r')
+        ) {
             return `"${strValue.replace(/"/g, '""')}"`;
         }
 
