@@ -12,7 +12,19 @@
  * and limitations under the License.
  */
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { URLDetector } from '../src/urlDetector';
+
+// p-limit v4+ is ESM-only, but ts-jest compiles `await import()` to require()
+// in this CommonJS test environment, which cannot load it. Mock it with a
+// pass-through limiter (real concurrency behavior is covered by p-limit itself;
+// in a real Node runtime the dynamic import loads the actual package).
+jest.mock('p-limit', () => ({
+    __esModule: true,
+    default: () => (fn: () => Promise<unknown>) => Promise.resolve().then(fn),
+}));
 
 describe('URLDetector', () => {
     let detector: URLDetector;
@@ -319,6 +331,41 @@ describe('URLDetector', () => {
             expect(() => {
                 new URLDetector({ concurrency: -1 });
             }).toThrow('Concurrency must be >= 1');
+        });
+    });
+
+    describe('process()', () => {
+        let tmpDir: string;
+        let originalCwd: string;
+
+        beforeEach(async () => {
+            tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-test-'));
+            await fs.promises.writeFile(
+                path.join(tmpDir, 'sample.js'),
+                'const apiUrl = "https://api.example.com/v1/users";\n',
+            );
+            originalCwd = process.cwd();
+            process.chdir(tmpDir);
+        });
+
+        afterEach(async () => {
+            process.chdir(originalCwd);
+            await fs.promises.rm(tmpDir, { recursive: true, force: true });
+        });
+
+        test('should find files via scan patterns and detect URLs', async () => {
+            const fileDetector = new URLDetector({ scan: ['**/*.js'] });
+            const results = await fileDetector.process();
+
+            expect(results).toHaveLength(1);
+            expect(results[0].file).toBe(path.join(tmpDir, 'sample.js'));
+            expect(results[0].urls.map(u => u.url)).toContain('https://api.example.com/v1/users');
+        });
+
+        test('should return an empty array when no files match', async () => {
+            const emptyDetector = new URLDetector({ scan: ['**/*.nonexistent'] });
+            const results = await emptyDetector.process();
+            expect(results).toHaveLength(0);
         });
     });
 
