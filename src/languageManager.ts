@@ -23,7 +23,12 @@ export interface LanguageConfig {
     name: string;
     /** Human-readable display name for documentation (e.g., 'JavaScript', 'TypeScript') */
     displayName?: string;
-    /** Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript') */
+    /**
+     * Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript').
+     * Must follow the standard grammar-package naming convention - an unscoped
+     * `tree-sitter-<name>` or a scoped `@<scope>/tree-sitter-<name>` package - since
+     * `LanguageManager` validates it against that convention before loading it.
+     */
     module: string;
     /** Array of file extensions associated with this language (e.g., ['.js', '.ts']) */
     extensions: string[];
@@ -69,9 +74,53 @@ export class LanguageManager {
     ];
     /* eslint-enable prettier/prettier */
 
+    /**
+     * A valid npm name segment (scope name or package name): starts and ends with
+     * an alphanumeric character, optionally with single `.`, `_`, or `-` separators
+     * between alphanumeric runs - matching npm's actual package-naming rules
+     * (which allow `.` and `_` outside the leading position), not just the hyphen-only
+     * convention most Tree-sitter grammar names happen to use.
+     */
+    private static readonly NPM_NAME_SEGMENT = '[a-z0-9]+(?:[._-][a-z0-9]+)*';
+
+    /**
+     * Matches the naming convention used by installable Tree-sitter grammar
+     * packages: an unscoped `tree-sitter-<name>` package, or a scoped
+     * `@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
+     * `module` is validated against this pattern before it's ever passed to
+     * `require()`, so a config can only load an installed grammar package -
+     * never an arbitrary file, relative, or absolute path.
+     */
+    private static readonly APPROVED_MODULE_PATTERN = new RegExp(
+        `^(?:tree-sitter-${LanguageManager.NPM_NAME_SEGMENT}` +
+            `|@${LanguageManager.NPM_NAME_SEGMENT}/tree-sitter-${LanguageManager.NPM_NAME_SEGMENT})$`,
+    );
+
     private languages: Map<string, unknown>;
     private languageConfigs: LanguageConfig[];
     private logger: Logger;
+
+    /**
+     * Returns a deep-enough copy of a language config so that mutating the
+     * caller's original object after it's handed to the manager (e.g. via
+     * the constructor's `customLanguages` argument, or `addLanguage`/
+     * `updateLanguage`) can't change what gets validated and loaded here.
+     */
+    private static cloneLanguageConfig(config: LanguageConfig): LanguageConfig {
+        return {
+            ...config,
+            extensions: [...config.extensions],
+            filenames: config.filenames ? [...config.filenames] : undefined,
+        };
+    }
+
+    /**
+     * Checks whether a module specifier matches the approved Tree-sitter
+     * grammar package naming convention (see APPROVED_MODULE_PATTERN).
+     */
+    private isApprovedModule(moduleName: string): boolean {
+        return LanguageManager.APPROVED_MODULE_PATTERN.test(moduleName);
+    }
 
     /**
      * Creates a new LanguageManager instance with optional custom configuration.
@@ -98,7 +147,9 @@ export class LanguageManager {
     constructor(logger?: Logger, customLanguages?: LanguageConfig[]) {
         this.languages = new Map();
         this.logger = logger || NullLogger;
-        this.languageConfigs = customLanguages ? [...customLanguages] : [...LanguageManager.DEFAULT_LANGUAGES];
+        this.languageConfigs = customLanguages
+            ? customLanguages.map(config => LanguageManager.cloneLanguageConfig(config))
+            : LanguageManager.DEFAULT_LANGUAGES.map(config => LanguageManager.cloneLanguageConfig(config));
         this.loadLanguages();
     }
 
@@ -107,6 +158,14 @@ export class LanguageManager {
         this.languages.clear();
 
         for (const config of this.languageConfigs) {
+            if (!this.isApprovedModule(config.module)) {
+                this.logger.warn(
+                    `Refusing to load ${config.name} parser: module "${config.module}" is not an approved ` +
+                        `Tree-sitter grammar package name`,
+                );
+                continue;
+            }
+
             try {
                 // eslint-disable-next-line @typescript-eslint/no-require-imports
                 const languageModule = require(config.module);
@@ -160,11 +219,12 @@ export class LanguageManager {
      * ```
      */
     public addLanguage(config: LanguageConfig): void {
-        const existingIndex = this.languageConfigs.findIndex(c => c.name === config.name);
+        const clonedConfig = LanguageManager.cloneLanguageConfig(config);
+        const existingIndex = this.languageConfigs.findIndex(c => c.name === clonedConfig.name);
         if (existingIndex >= 0) {
-            this.languageConfigs[existingIndex] = config;
+            this.languageConfigs[existingIndex] = clonedConfig;
         } else {
-            this.languageConfigs.push(config);
+            this.languageConfigs.push(clonedConfig);
         }
         this.loadLanguages();
     }
@@ -220,7 +280,7 @@ export class LanguageManager {
     public updateLanguage(name: string, config: LanguageConfig): boolean {
         const index = this.languageConfigs.findIndex(c => c.name === name);
         if (index >= 0) {
-            this.languageConfigs[index] = { ...config, name };
+            this.languageConfigs[index] = { ...LanguageManager.cloneLanguageConfig(config), name };
             this.loadLanguages();
             return true;
         }
