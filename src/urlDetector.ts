@@ -19,7 +19,6 @@ import Parser from 'tree-sitter';
 import { LanguageManager } from './languageManager';
 import { DetectorOptions, DetectorOptionsConfig } from './options';
 import { URLFilter, URLMatch } from './urlFilter';
-import pLimit from 'p-limit';
 import { sanitizeGlobPatterns } from './pathSanitizer';
 import { Logger, NullLogger } from './logger';
 
@@ -571,6 +570,9 @@ export class URLDetector {
             this.logger.info('No files found to process.');
             return [];
         }
+
+        // p-limit v4+ is ESM-only, so load it dynamically (works from this CommonJS build)
+        const { default: pLimit } = await import('p-limit');
 
         // Create concurrency limiter
         const limit = pLimit(this.options.concurrency || 10);
