@@ -12,7 +12,19 @@
  * and limitations under the License.
  */
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { URLDetector } from '../src/urlDetector';
+
+// p-limit v4+ is ESM-only, but ts-jest compiles `await import()` to require()
+// in this CommonJS test environment, which cannot load it. Mock it with a
+// pass-through limiter (real concurrency behavior is covered by p-limit itself;
+// in a real Node runtime the dynamic import loads the actual package).
+jest.mock('p-limit', () => ({
+    __esModule: true,
+    default: () => (fn: () => Promise<unknown>) => Promise.resolve().then(fn),
+}));
 
 describe('URLDetector', () => {
     let detector: URLDetector;
@@ -322,6 +334,41 @@ describe('URLDetector', () => {
         });
     });
 
+    describe('process()', () => {
+        let tmpDir: string;
+        let originalCwd: string;
+
+        beforeEach(async () => {
+            tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-test-'));
+            await fs.promises.writeFile(
+                path.join(tmpDir, 'sample.js'),
+                'const apiUrl = "https://api.example.com/v1/users";\n',
+            );
+            originalCwd = process.cwd();
+            process.chdir(tmpDir);
+        });
+
+        afterEach(async () => {
+            process.chdir(originalCwd);
+            await fs.promises.rm(tmpDir, { recursive: true, force: true });
+        });
+
+        test('should find files via scan patterns and detect URLs', async () => {
+            const fileDetector = new URLDetector({ scan: ['**/*.js'] });
+            const results = await fileDetector.process();
+
+            expect(results).toHaveLength(1);
+            expect(results[0].file).toBe(path.join(tmpDir, 'sample.js'));
+            expect(results[0].urls.map(u => u.url)).toContain('https://api.example.com/v1/users');
+        });
+
+        test('should return an empty array when no files match', async () => {
+            const emptyDetector = new URLDetector({ scan: ['**/*.nonexistent'] });
+            const results = await emptyDetector.process();
+            expect(results).toHaveLength(0);
+        });
+    });
+
     describe('Edge cases', () => {
         test('should handle empty input', async () => {
             const urls = await detector.detectURLs('', 'javascript');
@@ -458,6 +505,32 @@ const url2 = "https://example.com";`;
             expect(urls.every(u => u.url === 'https://example.com')).toBe(true);
             expect(urls[0].start).not.toBe(urls[1].start);
             expect(urls[0].end).not.toBe(urls[1].end);
+        });
+    });
+
+    describe('Control character stripping', () => {
+        test('should truncate a URL match at an ESC-sequence payload', async () => {
+            // eslint-disable-next-line no-control-regex
+            const code = `const url = "https://example.com/\x1b[31mfake\x1b[0m";`;
+            const urls = await detector.detectURLs(code, 'javascript');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            // The control byte ends the match entirely, so nothing after it (including
+            // the ESC sequence's payload) is ever captured as part of the URL.
+            expect(urls[0].url).toBe('https://example.com/');
+        });
+
+        test('should stop a fallback-regex match at a control byte', async () => {
+            // eslint-disable-next-line no-control-regex
+            const code = `# Perl comment: http://example.com/path\x00../../etc/passwd`;
+            const urls = await detector.detectURLs(code, 'perl');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            expect(urls[0].url).toBe('http://example.com/path');
         });
     });
 });

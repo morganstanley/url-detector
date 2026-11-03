@@ -19,7 +19,6 @@ import Parser from 'tree-sitter';
 import { LanguageManager } from './languageManager';
 import { DetectorOptions, DetectorOptionsConfig } from './options';
 import { URLFilter, URLMatch } from './urlFilter';
-import pLimit from 'p-limit';
 import { sanitizeGlobPatterns } from './pathSanitizer';
 import { Logger, NullLogger } from './logger';
 
@@ -111,7 +110,8 @@ export class URLDetector {
         this.logger = logger;
         this.parser = new Parser();
         this.languageManager = new LanguageManager(this.logger);
-        this.urlPattern = /(?:https?:\/\/|\/\/(?=[a-zA-Z0-9.-]+[a-zA-Z]))[^\s<>"'`${}]+/g;
+        // eslint-disable-next-line no-control-regex
+        this.urlPattern = /(?:https?:\/\/|\/\/(?=[a-zA-Z0-9.-]+[a-zA-Z]))[^\s<>"'`${}\x00-\x1f\x7f]+/g;
         this.commonSchemaPatterns = [
             /^\/\/W3C\/\/DTD/i,
             /^\/\/EN$/i,
@@ -413,7 +413,7 @@ export class URLDetector {
             const column = this.getColumnNumber(fullSourceCode, globalStart);
 
             const urlObj: URLMatch = {
-                url: match[0],
+                url: this.sanitizeUrlText(match[0]),
                 start: globalStart,
                 end: globalEnd,
                 line: line,
@@ -437,6 +437,17 @@ export class URLDetector {
         return this.commonSchemaPatterns.some(pattern => pattern.test(url));
     }
 
+    /**
+     * Strips ASCII control characters (including ESC and DEL) from an
+     * extracted URL. The urlPattern regex already excludes these from
+     * matching, so this is defense-in-depth against any control bytes
+     * that reach here through another path (e.g. a future regex change).
+     */
+    private sanitizeUrlText(url: string): string {
+        // eslint-disable-next-line no-control-regex
+        return url.replace(/[\x00-\x1f\x7f]/g, '');
+    }
+
     private fallbackDetection(sourceCode: string, filePath: string): URLMatch[] {
         const urls: URLMatch[] = [];
         const sourceLines = sourceCode.split('\n');
@@ -452,7 +463,7 @@ export class URLDetector {
             }
 
             const urlObj: URLMatch = {
-                url: match[0],
+                url: this.sanitizeUrlText(match[0]),
                 start: match.index,
                 end: match.index + match[0].length,
                 line: line,
@@ -571,6 +582,9 @@ export class URLDetector {
             this.logger.info('No files found to process.');
             return [];
         }
+
+        // p-limit v4+ is ESM-only, so load it dynamically (works from this CommonJS build)
+        const { default: pLimit } = await import('p-limit');
 
         // Create concurrency limiter
         const limit = pLimit(this.options.concurrency || 10);

@@ -157,9 +157,13 @@ export class URLFilter {
 
         // Must not be a single level domain (like localhost, server, db)
         const parts = domain.split('.');
+        const tld = parts[parts.length - 1];
 
-        // At least 2 parts and the last part should be a valid TLD (at least 2 chars)
-        return parts.length >= 2 && parts[parts.length - 1].length >= 2;
+        // At least 2 parts, the last part should be a valid TLD (at least 2 chars),
+        // and the TLD must not be all-digits (rules out dotted-decimal fragments like
+        // '1.22' or '192.168.1.999' that aren't real IP addresses but would otherwise
+        // pass the length check above).
+        return parts.length >= 2 && tld.length >= 2 && !/^[0-9]+$/.test(tld);
     }
 
     private isIPAddress(domain: string): boolean {
