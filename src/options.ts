@@ -205,6 +205,7 @@ export class DetectorOptions {
      * Loads file patterns from a text file.
      *
      * Reads a file containing patterns (one per line) and returns them as an array.
+     * Used for `--scan-file`, `--exclude-file`, and `--ignore-domains-file` lists.
      * Lines starting with '#' are treated as comments and ignored. Empty lines
      * and whitespace-only lines are also filtered out.
      *

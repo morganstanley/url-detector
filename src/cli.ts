@@ -41,6 +41,7 @@ program
     .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt, 10)
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
+    .option('--ignore-domains-file <file>', 'File containing domain patterns to ignore (one per line)')
     .action(async options => {
         // Create appropriate logger based on CLI options
         let logger;
@@ -56,6 +57,7 @@ program
             // Create mutable copy of options for processing
             let scanPatterns = (options.scan as string[]) || [];
             let excludePatterns = (options.exclude as string[]) || [];
+            let ignoreDomainPatterns = (options.ignoreDomains as string[]) || [];
 
             // Load patterns from files if specified
             if (options.scanFile) {
@@ -68,12 +70,17 @@ program
                 excludePatterns = [...excludePatterns, ...fileExcludePatterns];
             }
 
+            if (options.ignoreDomainsFile) {
+                const fileIgnoreDomainPatterns = await loadPatternsFromFile(options.ignoreDomainsFile as string);
+                ignoreDomainPatterns = [...ignoreDomainPatterns, ...fileIgnoreDomainPatterns];
+            }
+
             // Create detector with options and logger
             const detector = new URLDetector(
                 {
                     scan: scanPatterns,
                     exclude: excludePatterns,
-                    ignoreDomains: options.ignoreDomains as string[],
+                    ignoreDomains: ignoreDomainPatterns,
                     includeComments: options.includeComments as boolean,
                     includeNonFqdn: options.includeNonFqdn as boolean,
                     format: options.format as OutputFormat,
