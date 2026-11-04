@@ -141,7 +141,10 @@ const isMainModule = (() => {
     if (process.env.PKG_EXECPATH) return true; // Running from a pkg bundle
     if (!process.argv[1]) return false;
     try {
-        return import.meta.url === pathToFileURL(process.argv[1]).href;
+        // process.argv[1] may name a symlink (npm's Unix bin shim); import.meta.url is
+        // the resolved real path. Resolve argv[1] to its real path before comparing.
+        const entry = fs.realpathSync.native(process.argv[1]);
+        return import.meta.url === pathToFileURL(entry).href;
     } catch {
         return false;
     }

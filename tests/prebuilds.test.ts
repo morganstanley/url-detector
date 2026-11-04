@@ -20,23 +20,23 @@ import { PREBUILD_PLATFORMS } from '../scripts/platforms.js';
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
- * Returns the list of all tree-sitter packages (from dependencies + devDependencies).
+ * Returns the install paths of every resolved tree-sitter package instance recorded in
+ * the lockfile. This includes nested instances (e.g. a `tree-sitter-c` bundled under
+ * `tree-sitter-cpp`) that the direct dependency list in package.json does not capture.
+ * Each value is a path relative to the project root, e.g. `node_modules/tree-sitter` or
+ * `node_modules/tree-sitter-cpp/node_modules/tree-sitter-c`.
  */
 function getTreeSitterPackages(): string[] {
-    const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')) as {
-        dependencies?: Record<string, string>;
-        devDependencies?: Record<string, string>;
+    const lockfile = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package-lock.json'), 'utf8')) as {
+        packages?: Record<string, unknown>;
     };
     const packages = new Set<string>();
 
-    for (const name of Object.keys(packageJson.dependencies ?? {})) {
-        if (name.startsWith('tree-sitter') || name.includes('tree-sitter')) {
-            packages.add(name);
-        }
-    }
-    for (const name of Object.keys(packageJson.devDependencies ?? {})) {
-        if (name.startsWith('tree-sitter') || name.includes('tree-sitter')) {
-            packages.add(name);
+    for (const installPath of Object.keys(lockfile.packages ?? {})) {
+        if (!installPath) continue; // skip the root project entry
+        const name = installPath.split('node_modules/').pop() ?? '';
+        if (name.includes('tree-sitter')) {
+            packages.add(installPath);
         }
     }
 
@@ -44,11 +44,11 @@ function getTreeSitterPackages(): string[] {
 }
 
 /**
- * Checks whether a given tree-sitter package has a non-empty prebuilds directory
- * for the specified platform.
+ * Checks whether a resolved tree-sitter package instance has a non-empty prebuilds
+ * directory for the specified platform.
  */
-function hasPrebuilds(packageName: string, platform: string): boolean {
-    const prebuildsPath = path.join(projectRoot, 'node_modules', packageName, 'prebuilds', platform);
+function hasPrebuilds(packagePath: string, platform: string): boolean {
+    const prebuildsPath = path.join(projectRoot, packagePath, 'prebuilds', platform);
     if (!fs.existsSync(prebuildsPath)) return false;
     try {
         return fs.readdirSync(prebuildsPath).length > 0;
@@ -79,7 +79,7 @@ describe('Prebuilds Verification', () => {
     test('should detect at least one tree-sitter package', () => {
         const packages = getTreeSitterPackages();
         expect(packages.length).toBeGreaterThan(0);
-        expect(packages).toContain('tree-sitter');
+        expect(packages).toContain('node_modules/tree-sitter');
     });
 
     test('all tree-sitter packages should have prebuilds for all supported platforms', () => {

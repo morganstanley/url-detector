@@ -23,7 +23,12 @@ export interface LanguageConfig {
     name: string;
     /** Human-readable display name for documentation (e.g., 'JavaScript', 'TypeScript') */
     displayName?: string;
-    /** Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript') */
+    /**
+     * Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript').
+     * Must follow the standard grammar-package naming convention - an unscoped
+     * `tree-sitter-<name>` or a scoped `@<scope>/tree-sitter-<name>` package - since
+     * `LanguageManager` validates it against that convention before loading it.
+     */
     module: string;
     /** Array of file extensions associated with this language (e.g., ['.js', '.ts']) */
     extensions: string[];
@@ -69,12 +74,56 @@ export class LanguageManager {
     ];
     /* eslint-enable prettier/prettier */
 
+    /**
+     * A valid npm name segment (scope name or package name): starts and ends with
+     * an alphanumeric character, optionally with single `.`, `_`, or `-` separators
+     * between alphanumeric runs - matching npm's actual package-naming rules
+     * (which allow `.` and `_` outside the leading position), not just the hyphen-only
+     * convention most Tree-sitter grammar names happen to use.
+     */
+    private static readonly NPM_NAME_SEGMENT = '[a-z0-9]+(?:[._-][a-z0-9]+)*';
+
+    /**
+     * Matches the naming convention used by installable Tree-sitter grammar
+     * packages: an unscoped `tree-sitter-<name>` package, or a scoped
+     * `@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
+     * `module` is validated against this pattern before it's ever passed to the
+     * dynamic import(), so a config can only load an installed grammar package -
+     * never an arbitrary file, relative, or absolute path.
+     */
+    private static readonly APPROVED_MODULE_PATTERN = new RegExp(
+        `^(?:tree-sitter-${LanguageManager.NPM_NAME_SEGMENT}` +
+            `|@${LanguageManager.NPM_NAME_SEGMENT}/tree-sitter-${LanguageManager.NPM_NAME_SEGMENT})$`,
+    );
+
     /** Cache of resolved Tree-sitter language objects, keyed by lowercased name/extension/filename. */
     private languages: Map<string, unknown>;
     /** In-flight dynamic-import promises, keyed by language name, to dedupe concurrent loads. */
     private pendingLoads: Map<string, Promise<unknown>>;
     private languageConfigs: LanguageConfig[];
     private logger: Logger;
+
+    /**
+     * Returns a deep-enough copy of a language config so that mutating the
+     * caller's original object after it's handed to the manager (e.g. via
+     * the constructor's `customLanguages` argument, or `addLanguage`/
+     * `updateLanguage`) can't change what gets validated and loaded here.
+     */
+    private static cloneLanguageConfig(config: LanguageConfig): LanguageConfig {
+        return {
+            ...config,
+            extensions: [...config.extensions],
+            filenames: config.filenames ? [...config.filenames] : undefined,
+        };
+    }
+
+    /**
+     * Checks whether a module specifier matches the approved Tree-sitter
+     * grammar package naming convention (see APPROVED_MODULE_PATTERN).
+     */
+    private isApprovedModule(moduleName: string): boolean {
+        return LanguageManager.APPROVED_MODULE_PATTERN.test(moduleName);
+    }
 
     /**
      * Creates a new LanguageManager instance with optional custom configuration.
@@ -102,7 +151,9 @@ export class LanguageManager {
         this.languages = new Map();
         this.pendingLoads = new Map();
         this.logger = logger || NullLogger;
-        this.languageConfigs = customLanguages ? [...customLanguages] : [...LanguageManager.DEFAULT_LANGUAGES];
+        this.languageConfigs = customLanguages
+            ? customLanguages.map(config => LanguageManager.cloneLanguageConfig(config))
+            : LanguageManager.DEFAULT_LANGUAGES.map(config => LanguageManager.cloneLanguageConfig(config));
         // Tree-sitter grammars are loaded lazily and asynchronously (see getLanguage()):
         // modern grammar packages ship ESM with top-level await and can only be loaded via
         // dynamic import(), so there is nothing to synchronously initialize here.
@@ -135,10 +186,9 @@ export class LanguageManager {
      * default export, or a named export matching the configured sub-language/language name
      * (e.g. `typescript` from tree-sitter-typescript, which exports both `typescript` and `tsx`).
      *
-     * The explicit `bindings/node/index.js` sub-path is used instead of the bare package
-     * name to avoid Node's DEP0151 deprecation warning, which fires when an ESM import
-     * resolves a `main` field that omits the file extension (e.g. `"bindings/node"` →
-     * `bindings/node/index.js`). Importing the file directly bypasses that resolution step.
+     * The configured `module` is imported directly (it is validated above to be an approved
+     * grammar package name), rather than a hard-coded sub-path, so custom grammar packages
+     * with non-standard entry points keep working.
      *
      * Concurrent loads for the same language are deduplicated so the native binding is
      * imported only once.
@@ -147,10 +197,13 @@ export class LanguageManager {
      * @returns A Promise resolving to the Tree-sitter language object
      */
     private async loadLanguage(config: LanguageConfig): Promise<unknown> {
+        if (!this.isApprovedModule(config.module)) {
+            throw new Error(`module "${config.module}" is not an approved Tree-sitter grammar package name`);
+        }
+
         let pending = this.pendingLoads.get(config.name);
         if (!pending) {
-            const modulePath = `${config.module}/bindings/node/index.js`;
-            pending = import(modulePath).then((languageModule: Record<string, unknown>) => {
+            pending = import(config.module).then((languageModule: Record<string, unknown>) => {
                 // CommonJS modules arrive wrapped in `default`; ESM grammars export the
                 // language directly as `default`. Resolve to the actual export namespace.
                 const namespace =
@@ -199,11 +252,12 @@ export class LanguageManager {
      * ```
      */
     public addLanguage(config: LanguageConfig): void {
-        const existingIndex = this.languageConfigs.findIndex(c => c.name === config.name);
+        const clonedConfig = LanguageManager.cloneLanguageConfig(config);
+        const existingIndex = this.languageConfigs.findIndex(c => c.name === clonedConfig.name);
         if (existingIndex >= 0) {
-            this.languageConfigs[existingIndex] = config;
+            this.languageConfigs[existingIndex] = clonedConfig;
         } else {
-            this.languageConfigs.push(config);
+            this.languageConfigs.push(clonedConfig);
         }
         this.invalidateCache();
     }
@@ -259,7 +313,7 @@ export class LanguageManager {
     public updateLanguage(name: string, config: LanguageConfig): boolean {
         const index = this.languageConfigs.findIndex(c => c.name === name);
         if (index >= 0) {
-            this.languageConfigs[index] = { ...config, name };
+            this.languageConfigs[index] = { ...LanguageManager.cloneLanguageConfig(config), name };
             this.invalidateCache();
             return true;
         }
@@ -384,6 +438,14 @@ export class LanguageManager {
 
         try {
             const language = await this.loadLanguage(config);
+
+            // A removeLanguage()/updateLanguage() call may have landed while the grammar was
+            // loading (both invalidate the cache and replace/remove the config). If the config
+            // we loaded is no longer the current one, do not repopulate the cache with a stale
+            // result; re-resolve against the current configuration instead.
+            if (!this.languageConfigs.includes(config)) {
+                return this.getLanguage(key);
+            }
 
             // Cache the resolved language under its name, extensions, and filenames so that
             // subsequent lookups (by any of those keys) hit the cache synchronously.
