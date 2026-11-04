@@ -338,6 +338,11 @@ describe('URLDetector', () => {
 
         beforeEach(async () => {
             tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-test-'));
+            // Canonicalize the temp dir to its real path. On macOS, os.tmpdir() returns a
+            // /var/folders/... path while process.cwd() (getcwd) returns the symlink-resolved
+            // /private/var/folders/... path; findFiles() resolves against process.cwd(), so
+            // comparing the two would differ unless we normalize to the real path here.
+            tmpDir = await fs.promises.realpath(tmpDir);
             await fs.promises.writeFile(
                 path.join(tmpDir, 'sample.js'),
                 'const apiUrl = "https://api.example.com/v1/users";\n',
