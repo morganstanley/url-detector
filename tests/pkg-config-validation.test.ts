@@ -12,38 +12,40 @@
  * and limitations under the License.
  */
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- test imports an untyped JS build script (generate-pkg-config.js); Vitest transpiles without type-checking, so this IDE-only suppression is intentional.
 // @ts-nocheck
-const { generatePkgConfig, getTreeSitterDependencies } = require('../scripts/generate-pkg-config.js');
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const { generatePkgConfig, getTreeSitterDependencies } = await import('../scripts/generate-pkg-config.js');
 
 describe('PKG Configuration Validation', () => {
-  test('should find all tree-sitter dependencies', () => {
-    const packageJson = require('../package.json');
-    const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
-    const expectedCount = Object.keys(allDeps).filter(name => 
-      name.startsWith('tree-sitter') || name.includes('tree-sitter')
-    ).length;
-    
-    const deps = getTreeSitterDependencies();
-    
-    expect(deps).toContain('tree-sitter');
-    expect(deps).toContain('@tree-sitter-grammars/tree-sitter-kotlin');
-    expect(deps.length).toBe(expectedCount);
-  });
+    test('should find all tree-sitter dependencies', () => {
+        const packageJson = require('../package.json');
+        const allDeps = { ...packageJson.dependencies, ...packageJson.devDependencies };
+        const expectedCount = Object.keys(allDeps).filter(
+            name => name.startsWith('tree-sitter') || name.includes('tree-sitter'),
+        ).length;
 
-  test('should generate valid configurations for all platforms', () => {
-    const platforms = ['linux', 'macos', 'win'];
-    
-    platforms.forEach(platform => {
-      const config = generatePkgConfig(platform);
-      
-      expect(config).toHaveProperty('targets');
-      expect(config).toHaveProperty('ignore');  
-      expect(config).toHaveProperty('assets');
-      
-      expect(config.targets).toHaveLength(1);
-      expect(config.assets).toContain('node_modules/node-gyp-build/**/*');
+        const deps = getTreeSitterDependencies();
+
+        expect(deps).toContain('tree-sitter');
+        expect(deps).toContain('@tree-sitter-grammars/tree-sitter-kotlin');
+        expect(deps.length).toBe(expectedCount);
     });
-  });
 
+    test('should generate valid configurations for all platforms', () => {
+        const platforms = ['linux', 'macos', 'win'];
 
+        platforms.forEach(platform => {
+            const config = generatePkgConfig(platform);
+
+            expect(config).toHaveProperty('targets');
+            expect(config).toHaveProperty('ignore');
+            expect(config).toHaveProperty('assets');
+
+            expect(config.targets).toHaveLength(1);
+            expect(config.assets).toContain('node_modules/node-gyp-build/**/*');
+        });
+    });
 });

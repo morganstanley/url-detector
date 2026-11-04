@@ -15,14 +15,12 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { URLDetector } from '../src/urlDetector';
 
-// p-limit v4+ is ESM-only, but ts-jest compiles `await import()` to require()
-// in this CommonJS test environment, which cannot load it. Mock it with a
-// pass-through limiter (real concurrency behavior is covered by p-limit itself;
-// in a real Node runtime the dynamic import loads the actual package).
-jest.mock('p-limit', () => ({
-    __esModule: true,
+// p-limit v4+ is ESM-only. Mock it with a pass-through limiter so tests don't
+// depend on the real concurrency implementation (covered by p-limit's own tests).
+vi.mock('p-limit', () => ({
     default: () => (fn: () => Promise<unknown>) => Promise.resolve().then(fn),
 }));
 

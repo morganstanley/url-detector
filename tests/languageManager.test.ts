@@ -21,26 +21,26 @@ describe('LanguageManager', () => {
         manager = new LanguageManager();
     });
 
-    test('should detect language from extension', () => {
-        expect(manager.getLanguage('.js')).toBeDefined();
-        expect(manager.getLanguage('.ts')).toBeDefined();
-        expect(manager.getLanguage('.java')).toBeDefined();
-        expect(manager.getLanguage('.cpp')).toBeDefined();
-        expect(manager.getLanguage('.cs')).toBeDefined();
-        expect(manager.getLanguage('.html')).toBeDefined();
-        expect(manager.getLanguage('.css')).toBeDefined();
-        expect(manager.getLanguage('.scala')).toBeDefined();
-        expect(manager.getLanguage('.sc')).toBeDefined();
+    test('should detect language from extension', async () => {
+        expect(await manager.getLanguage('.js')).toBeDefined();
+        expect(await manager.getLanguage('.ts')).toBeDefined();
+        expect(await manager.getLanguage('.java')).toBeDefined();
+        expect(await manager.getLanguage('.cpp')).toBeDefined();
+        expect(await manager.getLanguage('.cs')).toBeDefined();
+        expect(await manager.getLanguage('.html')).toBeDefined();
+        expect(await manager.getLanguage('.css')).toBeDefined();
+        expect(await manager.getLanguage('.scala')).toBeDefined();
+        expect(await manager.getLanguage('.sc')).toBeDefined();
     });
 
-    test('should return undefined for unsupported extensions', () => {
-        expect(manager.getLanguage('.xyz')).toBeUndefined();
-        expect(manager.getLanguage('.unknown')).toBeUndefined();
+    test('should return undefined for unsupported extensions', async () => {
+        expect(await manager.getLanguage('.xyz')).toBeUndefined();
+        expect(await manager.getLanguage('.unknown')).toBeUndefined();
     });
 
-    test('should handle case insensitive lookup', () => {
-        expect(manager.getLanguage('JAVASCRIPT')).toBeDefined();
-        expect(manager.getLanguage('JavaScript')).toBeDefined();
-        expect(manager.getLanguage('javascript')).toBeDefined();
+    test('should handle case insensitive lookup', async () => {
+        expect(await manager.getLanguage('JAVASCRIPT')).toBeDefined();
+        expect(await manager.getLanguage('JavaScript')).toBeDefined();
+        expect(await manager.getLanguage('javascript')).toBeDefined();
     });
 });

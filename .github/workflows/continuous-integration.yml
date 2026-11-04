@@ -12,7 +12,12 @@ permissions:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
 
     env:
       NODE_VERSION: '22'
@@ -28,6 +33,7 @@ jobs:
     - run: npm run test:coverage
 
     - name: Codecov
+      if: matrix.os == 'ubuntu-latest'
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         directory: ./coverage

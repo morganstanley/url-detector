@@ -312,7 +312,7 @@ npm test
 npm run test:watch
 
 # Run with coverage
-npm test -- --coverage
+npm run test:coverage
 ```
 
 ## Development

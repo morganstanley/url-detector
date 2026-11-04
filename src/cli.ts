@@ -16,10 +16,14 @@
 
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { URLDetector } from './urlDetector';
-import { OutputFormat } from './options';
-import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger';
-import { OutputFormatter } from './outputFormatter';
+import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
+import { URLDetector } from './urlDetector.js';
+import { OutputFormat } from './options.js';
+import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
+import { OutputFormatter } from './outputFormatter.js';
+
+const require = createRequire(import.meta.url);
 const packageJson = require('../package.json');
 
 const program = new Command();
@@ -133,7 +137,17 @@ async function loadPatternsFromFile(filePath: string): Promise<string[]> {
 }
 
 // Only run if this file is executed directly (not imported)
-if (require.main === module) {
+const isMainModule = (() => {
+    if (process.env.PKG_EXECPATH) return true; // Running from a pkg bundle
+    if (!process.argv[1]) return false;
+    try {
+        return import.meta.url === pathToFileURL(process.argv[1]).href;
+    } catch {
+        return false;
+    }
+})();
+
+if (isMainModule) {
     // Handle cases where no arguments are provided
     program.parse();
 }

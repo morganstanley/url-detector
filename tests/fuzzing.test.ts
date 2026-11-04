@@ -171,10 +171,10 @@ describe('URLDetector Fuzzing Tests', () => {
             );
         });
 
-        it('should always return a valid language or undefined', () => {
-            fc.assert(
-                fc.property(fc.string(), extension => {
-                    const result = languageManager.getLanguage(extension);
+        it('should always return a valid language or undefined', async () => {
+            await fc.assert(
+                fc.asyncProperty(fc.string(), async extension => {
+                    const result = await languageManager.getLanguage(extension);
                     expect(result === undefined || typeof result === 'object').toBe(true);
                 }),
                 { numRuns: 500 },
