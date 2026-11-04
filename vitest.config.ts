@@ -22,6 +22,12 @@ export default defineConfig({
         // Tests use describe/test/expect/beforeEach as globals (Jest style),
         // so inject the test APIs globally rather than importing them per file.
         globals: true,
+        // Bound per-test and per-hook execution time. The default 5s test timeout is
+        // too tight for the (now deterministic) property-based tests, and an unbounded
+        // run lets a pathological case hang CI for tens of minutes instead of failing
+        // fast. 30s is generous for real work while still catching a genuine stall.
+        testTimeout: 30000,
+        hookTimeout: 30000,
         coverage: {
             provider: 'v8',
             include: ['src/**/*.ts'],
