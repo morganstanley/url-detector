@@ -20,9 +20,14 @@ import { URLDetector } from './urlDetector';
 import { OutputFormat } from './options';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger';
 import { OutputFormatter } from './outputFormatter';
+import { EXIT_CODES, getExitCodeForError } from './exitCodes';
 const packageJson = require('../package.json');
 
 const program = new Command();
+
+program.exitOverride(err => {
+    process.exit(err.exitCode === 0 ? EXIT_CODES.SUCCESS : EXIT_CODES.CONFIG);
+});
 
 program
     .name('url-detector')
@@ -37,7 +42,7 @@ program
     .option('-o, --output <file>', 'Output file path (defaults to stdout)')
     .option('-q, --quiet', 'Run in quiet mode with no console output', false)
     .option('--results-only', 'Show only results, suppressing progress and info messages', false)
-    .option('--fail-on-error', 'Exit with non-zero code if any URLs are found', false)
+    .option('--fail-on-error', 'Exit with code 1 if any URLs are found', false)
     .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt, 10)
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
@@ -114,13 +119,13 @@ program
 
             // Exit with error code if URLs found and fail-on-error is set
             if (options.failOnError && totalUrls > 0) {
-                process.exit(1);
+                process.exit(EXIT_CODES.URLS_FOUND);
             }
         } catch (error: unknown) {
             // Use the same logger - errors will be shown in results-only mode, hidden in quiet mode
             const errorMessage = error instanceof Error ? error.message : String(error);
             logger.error('Error:', errorMessage);
-            process.exit(1);
+            process.exit(getExitCodeForError(error));
         }
     });
 
