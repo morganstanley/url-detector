@@ -16,9 +16,19 @@ package="@morgan-stanley/url-detector"
 install_dir="/action"
 
 # Read an action input by name (e.g. SCAN-PATTERNS); empty when unset.
+# GitHub passes docker-action inputs as INPUT_<NAME> with the original
+# dashes (e.g. INPUT_SCAN-PATTERNS); some environments normalize dashes
+# to underscores, so check both forms.
 input() {
-    printenv "INPUT_$1" 2>/dev/null || true
+    v="$(printenv "INPUT_$1" 2>/dev/null || true)"
+    if [ -z "$v" ]; then
+        v="$(printenv "INPUT_$(printf '%s' "$1" | tr '-' '_')" 2>/dev/null || true)"
+    fi
+    printf '%s' "$v"
 }
+
+input_count="$(env | grep -c '^INPUT_' 2>/dev/null || true)"
+echo "Detected $input_count action input(s) in the container environment"
 
 # --- version -----------------------------------------------------------
 # Fallback mirrors the default declared in action.yml.
