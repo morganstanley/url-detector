@@ -43,5 +43,12 @@ jobs:
 
     - name: Pack the distributable tarball
       run: npm pack
+    - name: Prepare a fresh consumer project (this OS)
+      id: prep
+      run: node scripts/verify-pack.mjs --prepare
+    # The real npm runs under the job's shell, which resolves it natively on
+    # every OS; its log is captured for the clean-install assertion below.
+    - name: Install the packed tarball into the fresh consumer (this OS)
+      run: cd .pack-verify && npm install ../${{ steps.prep.outputs.tgz }} --no-audit --no-fund > install.log 2>&1
     - name: Verify clean install + native detection (fresh consumer, this OS)
-      run: node scripts/verify-pack.mjs
+      run: node scripts/verify-pack.mjs --check
