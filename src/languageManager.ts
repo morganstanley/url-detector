@@ -12,7 +12,7 @@
  * and limitations under the License.
  */
 
-import { Logger, NullLogger } from './logger';
+import { Logger, NullLogger } from './logger.js';
 import * as path from 'path';
 
 /**
@@ -23,7 +23,12 @@ export interface LanguageConfig {
     name: string;
     /** Human-readable display name for documentation (e.g., 'JavaScript', 'TypeScript') */
     displayName?: string;
-    /** Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript') */
+    /**
+     * Name of the Tree-sitter module to import (e.g., 'tree-sitter-javascript').
+     * Must follow the standard grammar-package naming convention - an unscoped
+     * `tree-sitter-<name>` or a scoped `@<scope>/tree-sitter-<name>` package - since
+     * `LanguageManager` validates it against that convention before loading it.
+     */
     module: string;
     /** Array of file extensions associated with this language (e.g., ['.js', '.ts']) */
     extensions: string[];
@@ -69,9 +74,88 @@ export class LanguageManager {
     ];
     /* eslint-enable prettier/prettier */
 
+    /**
+     * Lazy loaders for the built-in grammar packages, keyed by the exact `module`
+     * name used in DEFAULT_LANGUAGES. Each loader dynamically imports its grammar by a
+     * LITERAL package name, which is what lets `bun build --compile` embed the grammar
+     * (and its native .node prebuild) into the standalone binary. The generic
+     * `import(config.module)` fallback used for user-supplied grammars has a
+     * runtime-variable specifier and is not statically analyzable, so those grammars
+     * only resolve when node_modules is on disk (i.e. when running from source, not
+     * from a compiled binary).
+     */
+    private static readonly DEFAULT_GRAMMAR_LOADERS: Record<string, () => Promise<Record<string, unknown>>> = {
+        'tree-sitter-javascript': () => import('tree-sitter-javascript'),
+        'tree-sitter-typescript': () => import('tree-sitter-typescript'),
+        'tree-sitter-java': () => import('tree-sitter-java'),
+        'tree-sitter-c': () => import('tree-sitter-c'),
+        'tree-sitter-cpp': () => import('tree-sitter-cpp'),
+        'tree-sitter-c-sharp': () => import('tree-sitter-c-sharp'),
+        'tree-sitter-html': () => import('tree-sitter-html'),
+        'tree-sitter-css': () => import('tree-sitter-css'),
+        'tree-sitter-python': () => import('tree-sitter-python'),
+        'tree-sitter-php': () => import('tree-sitter-php'),
+        'tree-sitter-ruby': () => import('tree-sitter-ruby'),
+        'tree-sitter-go': () => import('tree-sitter-go'),
+        'tree-sitter-json': () => import('tree-sitter-json'),
+        'tree-sitter-bash': () => import('tree-sitter-bash'),
+        'tree-sitter-scala': () => import('tree-sitter-scala'),
+        '@tree-sitter-grammars/tree-sitter-toml': () => import('@tree-sitter-grammars/tree-sitter-toml'),
+        '@tree-sitter-grammars/tree-sitter-xml': () => import('@tree-sitter-grammars/tree-sitter-xml'),
+        '@tree-sitter-grammars/tree-sitter-kotlin': () => import('@tree-sitter-grammars/tree-sitter-kotlin'),
+        '@tree-sitter-grammars/tree-sitter-yaml': () => import('@tree-sitter-grammars/tree-sitter-yaml'),
+    };
+
+    /**
+     * A valid npm name segment (scope name or package name): starts and ends with
+     * an alphanumeric character, optionally with single `.`, `_`, or `-` separators
+     * between alphanumeric runs - matching npm's actual package-naming rules
+     * (which allow `.` and `_` outside the leading position), not just the hyphen-only
+     * convention most Tree-sitter grammar names happen to use.
+     */
+    private static readonly NPM_NAME_SEGMENT = '[a-z0-9]+(?:[._-][a-z0-9]+)*';
+
+    /**
+     * Matches the naming convention used by installable Tree-sitter grammar
+     * packages: an unscoped `tree-sitter-<name>` package, or a scoped
+     * `@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
+     * `module` is validated against this pattern before it's ever passed to the
+     * dynamic import(), so a config can only load an installed grammar package -
+     * never an arbitrary file, relative, or absolute path.
+     */
+    private static readonly APPROVED_MODULE_PATTERN = new RegExp(
+        `^(?:tree-sitter-${LanguageManager.NPM_NAME_SEGMENT}` +
+            `|@${LanguageManager.NPM_NAME_SEGMENT}/tree-sitter-${LanguageManager.NPM_NAME_SEGMENT})$`,
+    );
+
+    /** Cache of resolved Tree-sitter language objects, keyed by lowercased name/extension/filename. */
     private languages: Map<string, unknown>;
+    /** In-flight dynamic-import promises, keyed by language name, to dedupe concurrent loads. */
+    private pendingLoads: Map<string, Promise<unknown>>;
     private languageConfigs: LanguageConfig[];
     private logger: Logger;
+
+    /**
+     * Returns a deep-enough copy of a language config so that mutating the
+     * caller's original object after it's handed to the manager (e.g. via
+     * the constructor's `customLanguages` argument, or `addLanguage`/
+     * `updateLanguage`) can't change what gets validated and loaded here.
+     */
+    private static cloneLanguageConfig(config: LanguageConfig): LanguageConfig {
+        return {
+            ...config,
+            extensions: [...config.extensions],
+            filenames: config.filenames ? [...config.filenames] : undefined,
+        };
+    }
+
+    /**
+     * Checks whether a module specifier matches the approved Tree-sitter
+     * grammar package naming convention (see APPROVED_MODULE_PATTERN).
+     */
+    private isApprovedModule(moduleName: string): boolean {
+        return LanguageManager.APPROVED_MODULE_PATTERN.test(moduleName);
+    }
 
     /**
      * Creates a new LanguageManager instance with optional custom configuration.
@@ -97,46 +181,90 @@ export class LanguageManager {
      */
     constructor(logger?: Logger, customLanguages?: LanguageConfig[]) {
         this.languages = new Map();
+        this.pendingLoads = new Map();
         this.logger = logger || NullLogger;
-        this.languageConfigs = customLanguages ? [...customLanguages] : [...LanguageManager.DEFAULT_LANGUAGES];
-        this.loadLanguages();
+        this.languageConfigs = customLanguages
+            ? customLanguages.map(config => LanguageManager.cloneLanguageConfig(config))
+            : LanguageManager.DEFAULT_LANGUAGES.map(config => LanguageManager.cloneLanguageConfig(config));
+        // Tree-sitter grammars are loaded lazily and asynchronously (see getLanguage()):
+        // modern grammar packages ship ESM with top-level await and can only be loaded via
+        // dynamic import(), so there is nothing to synchronously initialize here.
     }
 
-    private loadLanguages(): void {
-        // Clear existing languages
-        this.languages.clear();
+    /**
+     * Finds the language configuration matching a name, file extension, or filename.
+     *
+     * The lookup is case-insensitive and checks the language name first, then the
+     * configured extensions, then any specific filenames.
+     *
+     * @param key The name, extension, or filename to match against
+     * @returns The matching language configuration, or undefined if none matches
+     */
+    private findConfig(key: string): LanguageConfig | undefined {
+        const normalized = key.toLowerCase();
+        return this.languageConfigs.find(
+            config =>
+                config.name.toLowerCase() === normalized ||
+                config.extensions.some(ext => ext.toLowerCase() === normalized) ||
+                (config.filenames ?? []).some(filename => filename.toLowerCase() === normalized),
+        );
+    }
 
-        for (const config of this.languageConfigs) {
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-require-imports
-                const languageModule = require(config.module);
-                let language: unknown;
-
-                // Try to get subLanguage from module, defaulting to language name, then module directly
-                const subLanguageName = config.subLanguage || config.name;
-                if (subLanguageName && (languageModule as Record<string, unknown>)[subLanguageName]) {
-                    language = (languageModule as Record<string, unknown>)[subLanguageName];
-                } else {
-                    // For Tree-sitter 0.25+, use the module directly
-                    language = languageModule;
-                }
-
-                this.languages.set(config.name, language);
-
-                for (const ext of config.extensions) {
-                    this.languages.set(ext, language);
-                }
-
-                if (config.filenames) {
-                    for (const filename of config.filenames) {
-                        this.languages.set(filename.toLowerCase(), language);
-                    }
-                }
-            } catch (error: unknown) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.warn(`Failed to load ${config.name} parser: ${errorMessage}`);
-            }
+    /**
+     * Dynamically loads a Tree-sitter grammar module and resolves the language object.
+     *
+     * Grammar packages are published as either CommonJS or ESM (some with top-level await).
+     * Both are loaded through dynamic import(). The valid Parser.Language is the module's
+     * default export, or a named export matching the configured sub-language/language name
+     * (e.g. `typescript` from tree-sitter-typescript, which exports both `typescript` and `tsx`).
+     *
+     * The configured `module` is imported directly (it is validated above to be an approved
+     * grammar package name), rather than a hard-coded sub-path, so custom grammar packages
+     * with non-standard entry points keep working.
+     *
+     * Concurrent loads for the same language are deduplicated so the native binding is
+     * imported only once.
+     *
+     * @param config The language configuration whose module should be loaded
+     * @returns A Promise resolving to the Tree-sitter language object
+     */
+    private async loadLanguage(config: LanguageConfig): Promise<unknown> {
+        if (!this.isApprovedModule(config.module)) {
+            throw new Error(`module "${config.module}" is not an approved Tree-sitter grammar package name`);
         }
+
+        let pending = this.pendingLoads.get(config.name);
+        if (!pending) {
+            // Prefer the literal-import loader for built-in grammars (so compiled
+            // standalone binaries can embed them); fall back to a dynamic import for
+            // user-supplied grammar packages, which only resolve against node_modules.
+            const load = LanguageManager.DEFAULT_GRAMMAR_LOADERS[config.module] ?? (() => import(config.module));
+            pending = load().then((languageModule: Record<string, unknown>) => {
+                // CommonJS modules arrive wrapped in `default`; ESM grammars export the
+                // language directly as `default`. Resolve to the actual export namespace.
+                const namespace =
+                    languageModule.default !== undefined
+                        ? (languageModule.default as Record<string, unknown>)
+                        : languageModule;
+                const subLanguageName = config.subLanguage || config.name;
+                return (subLanguageName && namespace[subLanguageName]) || namespace;
+            });
+            this.pendingLoads.set(config.name, pending);
+            // On failure, drop the cached promise so a subsequent call may retry.
+            pending.catch(() => this.pendingLoads.delete(config.name));
+        }
+        return pending;
+    }
+
+    /**
+     * Clears the cache of resolved grammars and any in-flight loads.
+     *
+     * Called whenever the configured set of languages changes so that the next getLanguage()
+     * call reflects the new configuration.
+     */
+    private invalidateCache(): void {
+        this.languages.clear();
+        this.pendingLoads.clear();
     }
 
     /**
@@ -160,13 +288,14 @@ export class LanguageManager {
      * ```
      */
     public addLanguage(config: LanguageConfig): void {
-        const existingIndex = this.languageConfigs.findIndex(c => c.name === config.name);
+        const clonedConfig = LanguageManager.cloneLanguageConfig(config);
+        const existingIndex = this.languageConfigs.findIndex(c => c.name === clonedConfig.name);
         if (existingIndex >= 0) {
-            this.languageConfigs[existingIndex] = config;
+            this.languageConfigs[existingIndex] = clonedConfig;
         } else {
-            this.languageConfigs.push(config);
+            this.languageConfigs.push(clonedConfig);
         }
-        this.loadLanguages();
+        this.invalidateCache();
     }
 
     /**
@@ -190,7 +319,7 @@ export class LanguageManager {
         this.languageConfigs = this.languageConfigs.filter(config => config.name !== name);
 
         if (this.languageConfigs.length < initialLength) {
-            this.loadLanguages();
+            this.invalidateCache();
             return true;
         }
         return false;
@@ -220,8 +349,8 @@ export class LanguageManager {
     public updateLanguage(name: string, config: LanguageConfig): boolean {
         const index = this.languageConfigs.findIndex(c => c.name === name);
         if (index >= 0) {
-            this.languageConfigs[index] = { ...config, name };
-            this.loadLanguages();
+            this.languageConfigs[index] = { ...LanguageManager.cloneLanguageConfig(config), name };
+            this.invalidateCache();
             return true;
         }
         return false;
@@ -305,22 +434,24 @@ export class LanguageManager {
     }
 
     /**
-     * Retrieves a loaded Tree-sitter language parser by name or file extension.
+     * Retrieves a Tree-sitter language parser by name or file extension.
      *
      * The lookup is case-insensitive and supports both language names (e.g., 'javascript')
-     * and file extensions (e.g., '.js'). Returns the actual Tree-sitter language object
-     * that can be used for parsing.
+     * and file extensions (e.g., '.js'). The grammar is loaded lazily via dynamic import()
+     * on first use and cached thereafter, so repeated lookups are synchronous from the cache.
+     * Returns the actual Tree-sitter language object that can be used for parsing.
      *
      * @param languageOrExtension Language name or file extension to look up
-     * @returns The Tree-sitter language parser object, or undefined if not found
+     * @returns A Promise resolving to the Tree-sitter language parser object,
+     *          or undefined if the language is not configured or fails to load
      *
      * @example
      * ```typescript
      * // Get by language name
-     * const jsParser = manager.getLanguage('javascript');
+     * const jsParser = await manager.getLanguage('javascript');
      *
      * // Get by file extension
-     * const tsParser = manager.getLanguage('.ts');
+     * const tsParser = await manager.getLanguage('.ts');
      *
      * if (jsParser) {
      *   // Use the parser with Tree-sitter
@@ -328,8 +459,46 @@ export class LanguageManager {
      * }
      * ```
      */
-    public getLanguage(languageOrExtension: string): unknown {
-        return this.languages.get(languageOrExtension.toLowerCase());
+    public async getLanguage(languageOrExtension: string): Promise<unknown> {
+        const key = languageOrExtension.toLowerCase();
+
+        const cached = this.languages.get(key);
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const config = this.findConfig(key);
+        if (!config) {
+            return undefined;
+        }
+
+        try {
+            const language = await this.loadLanguage(config);
+
+            // A removeLanguage()/updateLanguage() call may have landed while the grammar was
+            // loading (both invalidate the cache and replace/remove the config). If the config
+            // we loaded is no longer the current one, do not repopulate the cache with a stale
+            // result; re-resolve against the current configuration instead.
+            if (!this.languageConfigs.includes(config)) {
+                return this.getLanguage(key);
+            }
+
+            // Cache the resolved language under its name, extensions, and filenames so that
+            // subsequent lookups (by any of those keys) hit the cache synchronously.
+            this.languages.set(config.name.toLowerCase(), language);
+            for (const ext of config.extensions) {
+                this.languages.set(ext.toLowerCase(), language);
+            }
+            for (const filename of config.filenames ?? []) {
+                this.languages.set(filename.toLowerCase(), language);
+            }
+
+            return language;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.warn(`Failed to load ${config.name} parser: ${errorMessage}`);
+            return undefined;
+        }
     }
 
     /**

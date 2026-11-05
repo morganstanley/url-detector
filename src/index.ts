@@ -12,20 +12,37 @@
  * and limitations under the License.
  */
 
-export { URLDetector } from './urlDetector';
-export { DetectorOptions } from './options';
-export { LanguageManager, LanguageConfig } from './languageManager';
-export { URLFilter } from './urlFilter';
-export { OutputFormatter } from './outputFormatter';
-export { Logger, NullLogger, ConsoleLogger, ResultsOnlyLogger } from './logger';
+export { URLDetector } from './urlDetector.js';
+export { DetectorOptions } from './options.js';
+export { LanguageManager, LanguageConfig } from './languageManager.js';
+export { URLFilter } from './urlFilter.js';
+export { OutputFormatter } from './outputFormatter.js';
+export { Logger, NullLogger, ConsoleLogger, ResultsOnlyLogger } from './logger.js';
 
-import { URLDetector } from './urlDetector';
+import * as fs from 'fs';
+import { URLDetector } from './urlDetector.js';
+import { fileURLToPath } from 'url';
 
 // Default export for CommonJS compatibility
 export default URLDetector;
 
 // If this module is run directly
-if (require.main === module) {
+const isMainModule = (() => {
+    if (process.env.PKG_EXECPATH) return true;
+    if (!process.argv[1]) return false;
+    try {
+        // Normalize both sides to real paths: argv[1] may name a symlink, or a
+        // path whose casing differs from the casing stored on disk (Windows). A
+        // mismatch would silently skip the direct-run branch below.
+        const entry = fs.realpathSync.native(process.argv[1]);
+        const self = fs.realpathSync.native(fileURLToPath(import.meta.url));
+        return entry === self;
+    } catch {
+        return false;
+    }
+})();
+
+if (isMainModule) {
     const detector = new URLDetector({
         scan: ['**/*.js', '**/*.ts'],
         format: 'table',

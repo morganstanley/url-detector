@@ -41,6 +41,8 @@ These URLs represent real external dependencies that can impact security, availa
 
 ## Installation
 
+**Requires Node.js 22.12.0 or later.**
+
 To suppress warnings from tree-sitter transitive dependencies, all these commands can be run optionally with --loglevel=error flag.
 
 ### Global Installation (Recommended)
@@ -282,6 +284,13 @@ const customLanguages: LanguageConfig[] = [
 const languageManager = new LanguageManager(undefined, customLanguages);
 ```
 
+`module` must be the package name of an installed Tree-sitter grammar, following the
+standard naming convention: an unscoped `tree-sitter-<name>` package, or a scoped
+`@<scope>/tree-sitter-<name>` package (e.g. `@tree-sitter-grammars/tree-sitter-toml`).
+`LanguageManager` validates `module` against this convention before loading it; any
+other value (a file path, a non-grammar package name, etc.) is skipped with a warning
+instead of being loaded.
+
 ## How It Works
 
 1. **Language Detection**: Automatically detects programming language from file extension or filename
@@ -310,7 +319,7 @@ npm test
 npm run test:watch
 
 # Run with coverage
-npm test -- --coverage
+npm run test:coverage
 ```
 
 ## Development
@@ -370,24 +379,83 @@ npm run lint:fix
 
 ### Creating Self-Contained Executables
 
-The project supports creating standalone executables for distribution using [pkg](https://github.com/yao-pkg/pkg):
+The project supports creating standalone single-file executables for distribution using [Bun](https://bun.sh)'s `bun build --compile`:
 
 ```bash
 # Create executables for all platforms
-npm run pkg:all
+npm run build:exe:all
 
 # Create platform-specific executables
-npm run pkg:linux    # Creates url-detector-linux
-npm run pkg:macos    # Creates url-detector-macos  
-npm run pkg:win      # Creates url-detector-win.exe
+npm run build:exe:linux    # Creates url-detector-linux
+npm run build:exe:macos    # Creates url-detector-macos
+npm run build:exe:win      # Creates url-detector-win.exe
 ```
 
-The executables are optimized for size by only including platform-specific native dependencies. Each binary contains:
+Each binary is a self-contained executable that bundles:
 - The compiled TypeScript code
-- Node.js runtime
-- Only the Tree-sitter prebuilds for the target platform
+- The Bun runtime
+- Only the Tree-sitter native prebuilds for the target platform
 
-**Note**: You must run `npm run build` before creating executables to ensure the latest TypeScript changes are compiled.
+**Note**: You need [Bun](https://bun.sh) installed (`bun --version`). The build compiles directly from `src/`, so a separate `npm run build` step is not required.
+
+## GitHub Action
+
+URL Detector is available as a GitHub Action. The action runs in a minimal
+Node.js container and installs the published
+[`@morgan-stanley/url-detector`](https://www.npmjs.com/package/@morgan-stanley/url-detector)
+package at runtime, so the `version` input controls exactly which release
+scans your code:
+
+```yaml
+name: URL Detection Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scan-code:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run URL Detector
+        uses: morganstanley/url-detector@main
+        with:
+          version: 0.1.0-beta.4
+          scan-patterns: "src/**/*"
+          exclude-patterns: "node_modules/**"
+          format: "json"
+          output-file: "scan-results.json"
+          fail-on-error: true
+```
+
+**Note**: Pin the `version` input (and, once release tags exist, the action
+ref) for reproducible scans.
+
+### Action Inputs
+
+| Input | Description | Default |
+|--------|-------------|---------|
+| `version` | Version of `@morgan-stanley/url-detector` to install (semver or dist-tag) | `0.1.0-beta.4` |
+| `scan-patterns` | Glob patterns for files to scan (space-separated) | `**/*` |
+| `exclude-patterns` | Glob patterns for files to exclude (space-separated) | `''` |
+| `scan-file` | File containing glob patterns to scan (one per line) | `''` |
+| `exclude-file` | File containing glob patterns to exclude (one per line) | `''` |
+| `ignore-domains` | Domains to ignore (space-separated, supports wildcards) | `''` |
+| `include-comments` | Also scan commented-out lines for URLs | `false` |
+| `include-non-fqdn` | Include non-fully qualified domain names like "localhost" | `false` |
+| `format` | Output format: table, json, csv | `table` |
+| `output-file` | Output file path | `''` |
+| `fail-on-error` | Exit with non-zero code if any URLs are found | `false` |
+| `concurrency` | Maximum number of files to scan concurrently | `10` |
+| `results-only` | Show only results, suppressing progress and info messages | `false` |
+| `quiet` | Run in quiet mode with no console output | `false` |
 
 ## License
 

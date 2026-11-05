@@ -16,11 +16,12 @@
 
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { URLDetector } from './urlDetector';
-import { OutputFormat } from './options';
-import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger';
-import { OutputFormatter } from './outputFormatter';
-const packageJson = require('../package.json');
+import { fileURLToPath } from 'url';
+import { URLDetector } from './urlDetector.js';
+import { OutputFormat } from './options.js';
+import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
+import { OutputFormatter } from './outputFormatter.js';
+import packageJson from '../package.json' with { type: 'json' };
 
 const program = new Command();
 
@@ -132,8 +133,40 @@ async function loadPatternsFromFile(filePath: string): Promise<string[]> {
         .filter(line => line.length > 0 && !line.startsWith('#'));
 }
 
-// Only run if this file is executed directly (not imported)
-if (require.main === module) {
+// Only run if this file is executed directly (not imported as a library).
+const isMainModule = (() => {
+    // pkg bundle (Standard or SEA): the entry module IS the executable.
+    if (process.env.PKG_EXECPATH || typeof (process as NodeJS.Process & { pkg?: unknown }).pkg !== 'undefined') {
+        return true;
+    }
+
+    // Bun (both `bun <file>` dev mode and a `bun build --compile` executable).
+    // `import.meta.main` is true only for the module that is the process entrypoint,
+    // so it correctly distinguishes "running the CLI" from "imported as a library".
+    // It is unavailable under Node, where we fall through to the path comparison below.
+    if (process.versions.bun) {
+        return Boolean((import.meta as { main?: boolean }).main);
+    }
+
+    // Node: compare the resolved entry path to this module's own path.
+    if (!process.argv[1]) return false;
+    try {
+        // process.argv[1] may name a symlink (npm's Unix bin shim), or a path whose
+        // casing differs from the casing stored on disk (Windows paths are
+        // case-insensitive; `realpathSync.native` returns the stored casing while
+        // `import.meta.url` keeps the casing the process was launched with).
+        // Normalize both sides to their real paths before comparing so the check
+        // holds on every platform — a mismatch here would silently skip
+        // `program.parse()` and no-op the CLI.
+        const entry = fs.realpathSync.native(process.argv[1]);
+        const self = fs.realpathSync.native(fileURLToPath(import.meta.url));
+        return entry === self;
+    } catch {
+        return false;
+    }
+})();
+
+if (isMainModule) {
     // Handle cases where no arguments are provided
     program.parse();
 }

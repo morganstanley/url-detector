@@ -14,9 +14,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { URLDetector } from '../src/urlDetector';
 import { LanguageManager } from '../src/languageManager';
 import { Logger } from '../src/logger';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class TestLogger implements Logger {
     public warnings: string[] = [];

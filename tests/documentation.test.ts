@@ -18,7 +18,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { LanguageManager } from '../src/languageManager';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('Documentation Sync Tests', () => {
     let readmeContent: string;
@@ -33,10 +36,13 @@ describe('Documentation Sync Tests', () => {
             // Find all table rows in CLI Options section
             const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && 
-                        line.includes('--') && 
-                        !line.includes('Option') && 
-                        !line.includes('----------'));
+                .filter(
+                    line =>
+                        line.trim().startsWith('|') &&
+                        line.includes('--') &&
+                        !line.includes('Option') &&
+                        !line.includes('----------'),
+                );
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {
@@ -104,10 +110,13 @@ describe('Documentation Sync Tests', () => {
             // Find all table rows in CLI Options section
             const optionRows = readmeContent
                 .split('\n')
-                .filter(line => line.trim().startsWith('|') && 
-                        line.includes('--') && 
-                        !line.includes('Option') && 
-                        !line.includes('----------'));
+                .filter(
+                    line =>
+                        line.trim().startsWith('|') &&
+                        line.includes('--') &&
+                        !line.includes('Option') &&
+                        !line.includes('----------'),
+                );
 
             const documentedOptions: string[] = [];
             for (const row of optionRows) {

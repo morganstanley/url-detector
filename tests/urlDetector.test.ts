@@ -12,7 +12,17 @@
  * and limitations under the License.
  */
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { vi } from 'vitest';
 import { URLDetector } from '../src/urlDetector';
+
+// p-limit v4+ is ESM-only. Mock it with a pass-through limiter so tests don't
+// depend on the real concurrency implementation (covered by p-limit's own tests).
+vi.mock('p-limit', () => ({
+    default: () => (fn: () => Promise<unknown>) => Promise.resolve().then(fn),
+}));
 
 describe('URLDetector', () => {
     let detector: URLDetector;
@@ -330,6 +340,46 @@ describe('URLDetector', () => {
         });
     });
 
+    describe('process()', () => {
+        let tmpDir: string;
+        let originalCwd: string;
+
+        beforeEach(async () => {
+            tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-test-'));
+            // Canonicalize the temp dir to its real path. On macOS, os.tmpdir() returns a
+            // /var/folders/... path while process.cwd() (getcwd) returns the symlink-resolved
+            // /private/var/folders/... path; findFiles() resolves against process.cwd(), so
+            // comparing the two would differ unless we normalize to the real path here.
+            tmpDir = await fs.promises.realpath(tmpDir);
+            await fs.promises.writeFile(
+                path.join(tmpDir, 'sample.js'),
+                'const apiUrl = "https://api.example.com/v1/users";\n',
+            );
+            originalCwd = process.cwd();
+            process.chdir(tmpDir);
+        });
+
+        afterEach(async () => {
+            process.chdir(originalCwd);
+            await fs.promises.rm(tmpDir, { recursive: true, force: true });
+        });
+
+        test('should find files via scan patterns and detect URLs', async () => {
+            const fileDetector = new URLDetector({ scan: ['**/*.js'] });
+            const results = await fileDetector.process();
+
+            expect(results).toHaveLength(1);
+            expect(results[0].file).toBe(path.join(tmpDir, 'sample.js'));
+            expect(results[0].urls.map(u => u.url)).toContain('https://api.example.com/v1/users');
+        });
+
+        test('should return an empty array when no files match', async () => {
+            const emptyDetector = new URLDetector({ scan: ['**/*.nonexistent'] });
+            const results = await emptyDetector.process();
+            expect(results).toHaveLength(0);
+        });
+    });
+
     describe('Edge cases', () => {
         test('should handle empty input', async () => {
             const urls = await detector.detectURLs('', 'javascript');
@@ -466,6 +516,30 @@ const url2 = "https://example.com";`;
             expect(urls.every(u => u.url === 'https://example.com')).toBe(true);
             expect(urls[0].start).not.toBe(urls[1].start);
             expect(urls[0].end).not.toBe(urls[1].end);
+        });
+    });
+
+    describe('Control character stripping', () => {
+        test('should truncate a URL match at an ESC-sequence payload', async () => {
+            const code = `const url = "https://example.com/\x1b[31mfake\x1b[0m";`;
+            const urls = await detector.detectURLs(code, 'javascript');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            // The control byte ends the match entirely, so nothing after it (including
+            // the ESC sequence's payload) is ever captured as part of the URL.
+            expect(urls[0].url).toBe('https://example.com/');
+        });
+
+        test('should stop a fallback-regex match at a control byte', async () => {
+            const code = `# Perl comment: http://example.com/path\x00../../etc/passwd`;
+            const urls = await detector.detectURLs(code, 'perl');
+
+            expect(urls).toHaveLength(1);
+            // eslint-disable-next-line no-control-regex
+            expect(urls[0].url).not.toMatch(/[\x00-\x1f\x7f]/);
+            expect(urls[0].url).toBe('http://example.com/path');
         });
     });
 });
