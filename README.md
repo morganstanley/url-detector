@@ -398,6 +398,65 @@ Each binary is a self-contained executable that bundles:
 
 **Note**: You need [Bun](https://bun.sh) installed (`bun --version`). The build compiles directly from `src/`, so a separate `npm run build` step is not required.
 
+## GitHub Action
+
+URL Detector is available as a GitHub Action. The action runs in a minimal
+Node.js container and installs the published
+[`@morgan-stanley/url-detector`](https://www.npmjs.com/package/@morgan-stanley/url-detector)
+package at runtime, so the `version` input controls exactly which release
+scans your code:
+
+```yaml
+name: URL Detection Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  scan-code:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Run URL Detector
+        uses: morganstanley/url-detector@main
+        with:
+          version: 0.1.0-beta.4
+          scan-patterns: "src/**/*"
+          exclude-patterns: "node_modules/**"
+          format: "json"
+          output-file: "scan-results.json"
+          fail-on-error: true
+```
+
+**Note**: Pin the `version` input (and, once release tags exist, the action
+ref) for reproducible scans.
+
+### Action Inputs
+
+| Input | Description | Default |
+|--------|-------------|---------|
+| `version` | Version of `@morgan-stanley/url-detector` to install (semver or dist-tag) | `0.1.0-beta.4` |
+| `scan-patterns` | Glob patterns for files to scan (space-separated) | `**/*` |
+| `exclude-patterns` | Glob patterns for files to exclude (space-separated) | `''` |
+| `scan-file` | File containing glob patterns to scan (one per line) | `''` |
+| `exclude-file` | File containing glob patterns to exclude (one per line) | `''` |
+| `ignore-domains` | Domains to ignore (space-separated, supports wildcards) | `''` |
+| `include-comments` | Also scan commented-out lines for URLs | `false` |
+| `include-non-fqdn` | Include non-fully qualified domain names like "localhost" | `false` |
+| `format` | Output format: table, json, csv | `table` |
+| `output-file` | Output file path | `''` |
+| `fail-on-error` | Exit with non-zero code if any URLs are found | `false` |
+| `concurrency` | Maximum number of files to scan concurrently | `10` |
+| `results-only` | Show only results, suppressing progress and info messages | `false` |
+| `quiet` | Run in quiet mode with no console output | `false` |
+
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.

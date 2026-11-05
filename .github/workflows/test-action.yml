@@ -1,0 +1,48 @@
+name: Test URL Detector Action
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run URL Detector on source files
+        uses: ./
+        with:
+          version: "0.1.0-beta.4"
+          scan-patterns: "src/**/*"
+          format: "table"
+          include-comments: true
+          results-only: true
+
+      - name: Run URL Detector on examples with JSON output
+        uses: ./
+        with:
+          version: "0.1.0-beta.4"
+          scan-patterns: "examples/**/*"
+          format: "json"
+          output-file: "scan-results.json"
+          quiet: true
+
+      - name: Show JSON results
+        run: cat scan-results.json
+
+      - name: Run URL Detector with exclude patterns and ignored domains
+        uses: ./
+        with:
+          version: "0.1.0-beta.4"
+          scan-patterns: "**/*"
+          exclude-patterns: ".git/** node_modules/**"
+          ignore-domains: "*.example.com"
+          format: "csv"
+          results-only: true
