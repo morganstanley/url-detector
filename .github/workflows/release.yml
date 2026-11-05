@@ -23,10 +23,16 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org/
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
       - run: npm ci
       - run: npm run build
       - run: npm test
-      - run: npm run pkg:all
+      - run: npm run build:exe:all
+      # Smoke-test the native (Linux) binary produced on this runner: confirm it
+      # executes and can load its tree-sitter prebuilds before it ships.
+      - run: ./url-detector-linux --help
       - run: npm install -g npm@latest  # trusted publishing requires later version of npm then in node 22 but we need node 22 for tree-sitter right now
       - run: npm publish --tag latest --provenance --access public
 

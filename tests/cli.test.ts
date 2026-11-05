@@ -98,15 +98,7 @@ describe('CLI', () => {
         // and only logs a summary. This covers the totalUrls === 0 branch.
         await fs.promises.writeFile(path.join(tmpDir, 'clean.js'), 'const x = 1;\n');
 
-        await program.parseAsync([
-            'node',
-            'url-detector',
-            '--scan',
-            'clean.js',
-            '--format',
-            'json',
-            '--quiet',
-        ]);
+        await program.parseAsync(['node', 'url-detector', '--scan', 'clean.js', '--format', 'json', '--quiet']);
 
         // No output file was requested; nothing to assert on disk. Reaching here
         // without an exception means the action handler completed the no-URL path.

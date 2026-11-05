@@ -16,14 +16,9 @@
 
 // Canonical list of prebuilt-binary platforms (OS + architecture) that the
 // tree-sitter ecosystem ships inside its npm tarballs.
-// Used by scripts/generate-pkg-config.js and tests/prebuilds.test.ts.
+// Used by tests/prebuilds.test.ts to verify every grammar ships a prebuild for
+// each platform — required so `bun build --compile` can embed the native .node
+// addon for the target platform.
 const PREBUILD_PLATFORMS = ['win32-x64', 'win32-arm64', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64'];
 
-// Mapping from @yao-pkg/pkg target names to prebuild platform directories.
-const PKG_TARGET_TO_PREBUILD = {
-    linux: 'linux-x64',
-    macos: 'darwin-x64',
-    win: 'win32-x64',
-};
-
-export { PREBUILD_PLATFORMS, PKG_TARGET_TO_PREBUILD };
+export { PREBUILD_PLATFORMS };

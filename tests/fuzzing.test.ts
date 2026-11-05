@@ -77,18 +77,15 @@ describe('URLDetector Fuzzing Tests', () => {
             };
 
             await fc.assert(
-                fc.asyncProperty(
-                    fc.integer({ min: 10000, max: 20000 }),
-                    async (targetLength) => {
-                        const input = buildLongCode(targetLength);
-                        const start = Date.now();
-                        const result = await detector.detectURLs(input, 'javascript', 'long-file');
-                        const duration = Date.now() - start;
+                fc.asyncProperty(fc.integer({ min: 10000, max: 20000 }), async targetLength => {
+                    const input = buildLongCode(targetLength);
+                    const start = Date.now();
+                    const result = await detector.detectURLs(input, 'javascript', 'long-file');
+                    const duration = Date.now() - start;
 
-                        expect(Array.isArray(result)).toBe(true);
-                        expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
-                    },
-                ),
+                    expect(Array.isArray(result)).toBe(true);
+                    expect(duration).toBeLessThan(10000); // Should complete within 10 seconds
+                }),
                 { numRuns: 5 },
             );
         });

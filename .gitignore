@@ -35,10 +35,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 
-# PKG generated binaries
+# Standalone executable outputs (bun build --compile)
 url-detector-linux
 url-detector-macos
 url-detector-win.exe
 
-# Temporary PKG config files
-pkg-*.json
+# Bun build cache
+.bun-cache/

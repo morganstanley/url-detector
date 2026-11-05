@@ -16,15 +16,12 @@
 
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { createRequire } from 'module';
 import { pathToFileURL } from 'url';
 import { URLDetector } from './urlDetector.js';
 import { OutputFormat } from './options.js';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
 import { OutputFormatter } from './outputFormatter.js';
-
-const require = createRequire(import.meta.url);
-const packageJson = require('../package.json');
+import packageJson from '../package.json' with { type: 'json' };
 
 const program = new Command();
 
@@ -136,9 +133,22 @@ async function loadPatternsFromFile(filePath: string): Promise<string[]> {
         .filter(line => line.length > 0 && !line.startsWith('#'));
 }
 
-// Only run if this file is executed directly (not imported)
+// Only run if this file is executed directly (not imported as a library).
 const isMainModule = (() => {
-    if (process.env.PKG_EXECPATH) return true; // Running from a pkg bundle
+    // pkg bundle (Standard or SEA): the entry module IS the executable.
+    if (process.env.PKG_EXECPATH || typeof (process as NodeJS.Process & { pkg?: unknown }).pkg !== 'undefined') {
+        return true;
+    }
+
+    // Bun (both `bun <file>` dev mode and a `bun build --compile` executable).
+    // `import.meta.main` is true only for the module that is the process entrypoint,
+    // so it correctly distinguishes "running the CLI" from "imported as a library".
+    // It is unavailable under Node, where we fall through to the path comparison below.
+    if (process.versions.bun) {
+        return Boolean((import.meta as { main?: boolean }).main);
+    }
+
+    // Node: compare the resolved entry path to this module's own URL.
     if (!process.argv[1]) return false;
     try {
         // process.argv[1] may name a symlink (npm's Unix bin shim); import.meta.url is

@@ -75,6 +75,38 @@ export class LanguageManager {
     /* eslint-enable prettier/prettier */
 
     /**
+     * Lazy loaders for the built-in grammar packages, keyed by the exact `module`
+     * name used in DEFAULT_LANGUAGES. Each loader dynamically imports its grammar by a
+     * LITERAL package name, which is what lets `bun build --compile` embed the grammar
+     * (and its native .node prebuild) into the standalone binary. The generic
+     * `import(config.module)` fallback used for user-supplied grammars has a
+     * runtime-variable specifier and is not statically analyzable, so those grammars
+     * only resolve when node_modules is on disk (i.e. when running from source, not
+     * from a compiled binary).
+     */
+    private static readonly DEFAULT_GRAMMAR_LOADERS: Record<string, () => Promise<Record<string, unknown>>> = {
+        'tree-sitter-javascript': () => import('tree-sitter-javascript'),
+        'tree-sitter-typescript': () => import('tree-sitter-typescript'),
+        'tree-sitter-java': () => import('tree-sitter-java'),
+        'tree-sitter-c': () => import('tree-sitter-c'),
+        'tree-sitter-cpp': () => import('tree-sitter-cpp'),
+        'tree-sitter-c-sharp': () => import('tree-sitter-c-sharp'),
+        'tree-sitter-html': () => import('tree-sitter-html'),
+        'tree-sitter-css': () => import('tree-sitter-css'),
+        'tree-sitter-python': () => import('tree-sitter-python'),
+        'tree-sitter-php': () => import('tree-sitter-php'),
+        'tree-sitter-ruby': () => import('tree-sitter-ruby'),
+        'tree-sitter-go': () => import('tree-sitter-go'),
+        'tree-sitter-json': () => import('tree-sitter-json'),
+        'tree-sitter-bash': () => import('tree-sitter-bash'),
+        'tree-sitter-scala': () => import('tree-sitter-scala'),
+        '@tree-sitter-grammars/tree-sitter-toml': () => import('@tree-sitter-grammars/tree-sitter-toml'),
+        '@tree-sitter-grammars/tree-sitter-xml': () => import('@tree-sitter-grammars/tree-sitter-xml'),
+        '@tree-sitter-grammars/tree-sitter-kotlin': () => import('@tree-sitter-grammars/tree-sitter-kotlin'),
+        '@tree-sitter-grammars/tree-sitter-yaml': () => import('@tree-sitter-grammars/tree-sitter-yaml'),
+    };
+
+    /**
      * A valid npm name segment (scope name or package name): starts and ends with
      * an alphanumeric character, optionally with single `.`, `_`, or `-` separators
      * between alphanumeric runs - matching npm's actual package-naming rules
@@ -203,7 +235,11 @@ export class LanguageManager {
 
         let pending = this.pendingLoads.get(config.name);
         if (!pending) {
-            pending = import(config.module).then((languageModule: Record<string, unknown>) => {
+            // Prefer the literal-import loader for built-in grammars (so compiled
+            // standalone binaries can embed them); fall back to a dynamic import for
+            // user-supplied grammar packages, which only resolve against node_modules.
+            const load = LanguageManager.DEFAULT_GRAMMAR_LOADERS[config.module] ?? (() => import(config.module));
+            pending = load().then((languageModule: Record<string, unknown>) => {
                 // CommonJS modules arrive wrapped in `default`; ESM grammars export the
                 // language directly as `default`. Resolve to the actual export namespace.
                 const namespace =

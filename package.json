@@ -14,11 +14,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "clean": "rimraf dist",
-    "pkg": "npm run pkg:all",
-    "pkg:all": "npm run pkg:linux && npm run pkg:macos && npm run pkg:win",
-    "pkg:linux": "node scripts/generate-pkg-config.js linux > pkg-linux.json && npx @yao-pkg/pkg dist/cli.js --config pkg-linux.json --output url-detector-linux && rimraf pkg-linux.json",
-    "pkg:macos": "node scripts/generate-pkg-config.js macos > pkg-macos.json && npx @yao-pkg/pkg dist/cli.js --config pkg-macos.json --output url-detector-macos && rimraf pkg-macos.json",
-    "pkg:win": "node scripts/generate-pkg-config.js win > pkg-win.json && npx @yao-pkg/pkg dist/cli.js --config pkg-win.json --output url-detector-win.exe && rimraf pkg-win.json"
+    "build:exe": "npm run build:exe:all",
+    "build:exe:all": "npm run build:exe:linux && npm run build:exe:macos && npm run build:exe:win",
+    "prebuild:exe": "node scripts/ensure-grammar-prebuilds.js",
+    "build:exe:linux": "npm run prebuild:exe && bun build src/cli.ts --compile --target=bun-linux-x64 --outfile url-detector-linux",
+    "build:exe:macos": "npm run prebuild:exe && bun build src/cli.ts --compile --target=bun-darwin-x64 --outfile url-detector-macos",
+    "build:exe:win": "npm run prebuild:exe && bun build src/cli.ts --compile --target=bun-windows-x64 --outfile url-detector-win.exe"
   },
   "bin": {
     "url-detector": "./dist/cli.js"
