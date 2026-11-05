@@ -46,38 +46,16 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 
 /**
  * Runs a command, always returning { code, log } where log is stdout+stderr.
- * No shell is used anywhere: node.exe is a real executable on every platform, so
- * we run each JS entry (npm-cli.js, cli.js) directly with it. This avoids the
- * Windows `.cmd` launcher (which needs a shell) and the "shell does not escape
- * args" pitfall, so a spaced path like `...\AppData\Local\Author Software\...`
- * in the node install location is handled correctly.
+ * No shell is used, so arguments reach the child process verbatim (no quoting
+ * or escaping surprises). `npm` resolves fine on every CI platform — on
+ * Windows Node resolves it through PATHEXT and CreateProcess handles the
+ * `.cmd` launcher — and the installed CLI is run directly with this same node
+ * binary.
  */
 function run(cmd, args, cwd) {
     const res = spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1024 * 1024 * 64 });
     const spawnErr = res.error ? `\n[spawn error] ${res.error.message}` : '';
     return { code: res.status, log: `${res.stdout ?? ''}${res.stderr ?? ''}${spawnErr}` };
-}
-
-/**
- * Locates npm's CLI entry point (`npm-cli.js`) relative to the running node
- * binary, so we can run npm without shelling out to the platform's `npm`
- * launcher. npm is always bundled with node; the layout differs by OS:
- *   - Windows: <node-prefix>\node_modules\npm\bin\npm-cli.js   (node.exe in prefix)
- *   - Unix:    <node-prefix>/lib/node_modules/npm/bin/npm-cli.js (node in prefix/bin)
- */
-function locateNpmCli() {
-    const nodeDir = path.dirname(process.execPath);
-    const candidates = [
-        path.join(nodeDir, 'node_modules', 'npm', 'bin', 'npm-cli.js'),
-        path.join(path.dirname(nodeDir), 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js'),
-        path.join(path.dirname(nodeDir), 'node_modules', 'npm', 'bin', 'npm-cli.js'),
-    ];
-    return candidates.find(p => fs.existsSync(p));
-}
-const npmCli = locateNpmCli();
-if (!npmCli) {
-    process.stdout.write(`FAIL: could not locate npm-cli.js near ${process.execPath}\n`);
-    process.exit(1);
 }
 
 /** Prints a labelled block and returns true if `needle` is in `haystack`. */
@@ -118,11 +96,7 @@ fs.writeFileSync(
 );
 
 process.stdout.write('\n(2) Installing the tarball into a fresh consumer directory...\n');
-const install = run(
-    process.execPath,
-    [npmCli, 'install', tgzPath, '--no-audit', '--no-fund', '--loglevel=warn'],
-    consumer,
-);
+const install = run('npm', ['install', tgzPath, '--no-audit', '--no-fund', '--loglevel=warn'], consumer);
 if (install.code !== 0) {
     fail(`npm install exited ${install.code}\n${install.log}`);
 }
