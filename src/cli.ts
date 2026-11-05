@@ -16,7 +16,7 @@
 
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 import { URLDetector } from './urlDetector.js';
 import { OutputFormat } from './options.js';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
@@ -148,13 +148,19 @@ const isMainModule = (() => {
         return Boolean((import.meta as { main?: boolean }).main);
     }
 
-    // Node: compare the resolved entry path to this module's own URL.
+    // Node: compare the resolved entry path to this module's own path.
     if (!process.argv[1]) return false;
     try {
-        // process.argv[1] may name a symlink (npm's Unix bin shim); import.meta.url is
-        // the resolved real path. Resolve argv[1] to its real path before comparing.
+        // process.argv[1] may name a symlink (npm's Unix bin shim), or a path whose
+        // casing differs from the casing stored on disk (Windows paths are
+        // case-insensitive; `realpathSync.native` returns the stored casing while
+        // `import.meta.url` keeps the casing the process was launched with).
+        // Normalize both sides to their real paths before comparing so the check
+        // holds on every platform — a mismatch here would silently skip
+        // `program.parse()` and no-op the CLI.
         const entry = fs.realpathSync.native(process.argv[1]);
-        return import.meta.url === pathToFileURL(entry).href;
+        const self = fs.realpathSync.native(fileURLToPath(import.meta.url));
+        return entry === self;
     } catch {
         return false;
     }
