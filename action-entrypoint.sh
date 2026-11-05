@@ -27,8 +27,11 @@ input() {
     printf '%s' "$v"
 }
 
-input_count="$(env | grep -c '^INPUT_' 2>/dev/null || true)"
-echo "Detected $input_count action input(s) in the container environment"
+echo "Action inputs visible in the container environment:"
+env | grep '^INPUT_' | cut -d= -f1 | while IFS= read -r k; do
+    v="$(printenv "$k" 2>/dev/null | cut -c1-60)"
+    echo "  $k = $v"
+done
 
 # --- version -----------------------------------------------------------
 # Fallback mirrors the default declared in action.yml.
