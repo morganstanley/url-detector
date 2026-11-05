@@ -42,3 +42,6 @@ url-detector-win.exe
 
 # Bun build cache
 .bun-cache/
+
+# Pack/install smoke-test consumer project (created and removed by scripts/verify-pack.mjs)
+.pack-verify/

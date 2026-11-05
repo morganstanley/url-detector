@@ -19,8 +19,9 @@ export { URLFilter } from './urlFilter.js';
 export { OutputFormatter } from './outputFormatter.js';
 export { Logger, NullLogger, ConsoleLogger, ResultsOnlyLogger } from './logger.js';
 
+import * as fs from 'fs';
 import { URLDetector } from './urlDetector.js';
-import { pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 
 // Default export for CommonJS compatibility
 export default URLDetector;
@@ -30,7 +31,12 @@ const isMainModule = (() => {
     if (process.env.PKG_EXECPATH) return true;
     if (!process.argv[1]) return false;
     try {
-        return import.meta.url === pathToFileURL(process.argv[1]).href;
+        // Normalize both sides to real paths: argv[1] may name a symlink, or a
+        // path whose casing differs from the casing stored on disk (Windows). A
+        // mismatch would silently skip the direct-run branch below.
+        const entry = fs.realpathSync.native(process.argv[1]);
+        const self = fs.realpathSync.native(fileURLToPath(import.meta.url));
+        return entry === self;
     } catch {
         return false;
     }
