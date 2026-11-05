@@ -60,3 +60,20 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  # Inputs are passed positionally, in the same order as declared above;
+  # action-entrypoint.sh maps these positions to CLI flags.
+  args:
+    - ${{ inputs.version }}
+    - ${{ inputs.scan-patterns }}
+    - ${{ inputs.exclude-patterns }}
+    - ${{ inputs.scan-file }}
+    - ${{ inputs.exclude-file }}
+    - ${{ inputs.ignore-domains }}
+    - ${{ inputs.include-comments }}
+    - ${{ inputs.include-non-fqdn }}
+    - ${{ inputs.format }}
+    - ${{ inputs.output-file }}
+    - ${{ inputs.fail-on-error }}
+    - ${{ inputs.concurrency }}
+    - ${{ inputs.results-only }}
+    - ${{ inputs.quiet }}

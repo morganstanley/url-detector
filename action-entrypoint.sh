@@ -2,40 +2,38 @@
 # Entrypoint for the URL Detector GitHub Action.
 #
 # Installs the published @morgan-stanley/url-detector package (version taken
-# from the `version` action input) and runs its CLI.
+# from the `version` input) and runs its CLI.
 #
-# Docker actions only support static `runs.args`, so conditional flags
-# (e.g. --include-comments) cannot be wired there. Instead, GitHub passes
-# every action input into the container as an environment variable named
-# INPUT_<NAME> (upper-cased, dashes preserved, e.g. INPUT_SCAN-PATTERNS).
-# This script reads those variables to build the CLI invocation.
+# Docker container actions receive inputs via runs.args (GitHub only
+# guarantees INPUT_* env vars for inputs whose names contain no dashes).
+# action.yml passes every input as a positional argument, in the same order
+# as the inputs are declared in action.yml. This script maps those positions
+# to CLI flags. Keep the two files in sync if inputs are added or reordered.
 
 set -eu
 
 package="@morgan-stanley/url-detector"
 install_dir="/action"
 
-# Read an action input by name (e.g. SCAN-PATTERNS); empty when unset.
-# GitHub passes docker-action inputs as INPUT_<NAME> with the original
-# dashes (e.g. INPUT_SCAN-PATTERNS); some environments normalize dashes
-# to underscores, so check both forms.
-input() {
-    v="$(printenv "INPUT_$1" 2>/dev/null || true)"
-    if [ -z "$v" ]; then
-        v="$(printenv "INPUT_$(printf '%s' "$1" | tr '-' '_')" 2>/dev/null || true)"
-    fi
-    printf '%s' "$v"
-}
-
-echo "Action inputs visible in the container environment:"
-env | grep '^INPUT_' | cut -d= -f1 | while IFS= read -r k; do
-    v="$(printenv "$k" 2>/dev/null | cut -c1-60)"
-    echo "  $k = $v"
-done
+# Positional inputs (order matches action.yml inputs). ${N-} is safe under
+# set -u and yields an empty string for an unset slot.
+version="${1-}"
+scan_patterns="${2-}"
+exclude_patterns="${3-}"
+scan_file="${4-}"
+exclude_file="${5-}"
+ignore_domains="${6-}"
+include_comments="${7-}"
+include_non_fqdn="${8-}"
+format="${9-}"
+output_file="${10-}"
+fail_on_error="${11-}"
+concurrency="${12-}"
+results_only="${13-}"
+quiet="${14-}"
 
 # --- version -----------------------------------------------------------
 # Fallback mirrors the default declared in action.yml.
-version="$(input VERSION)"
 if [ -z "$version" ]; then
     version="0.1.0-beta.4"
 fi
@@ -69,41 +67,35 @@ add_flag_values() {
     args="$args $1 $2"
 }
 
-scan_patterns="$(input SCAN-PATTERNS)"
 if [ -z "$scan_patterns" ]; then
     scan_patterns="**/*"
 fi
 add_flag_values "--scan" "$scan_patterns"
 
-exclude_patterns="$(input EXCLUDE-PATTERNS)"
 if [ -n "$exclude_patterns" ]; then
     add_flag_values "--exclude" "$exclude_patterns"
 fi
 
-scan_file="$(input SCAN-FILE)"
 if [ -n "$scan_file" ]; then
     add_flag_values "--scan-file" "$scan_file"
 fi
 
-exclude_file="$(input EXCLUDE-FILE)"
 if [ -n "$exclude_file" ]; then
     add_flag_values "--exclude-file" "$exclude_file"
 fi
 
-ignore_domains="$(input IGNORE-DOMAINS)"
 if [ -n "$ignore_domains" ]; then
     add_flag_values "--ignore-domains" "$ignore_domains"
 fi
 
-if [ "$(input INCLUDE-COMMENTS)" = "true" ]; then
+if [ "$include_comments" = "true" ]; then
     add_flag "--include-comments"
 fi
 
-if [ "$(input INCLUDE-NON-FQDN)" = "true" ]; then
+if [ "$include_non_fqdn" = "true" ]; then
     add_flag "--include-non-fqdn"
 fi
 
-format="$(input FORMAT)"
 if [ -z "$format" ]; then
     format="table"
 fi
@@ -117,16 +109,14 @@ case "$format" in
         ;;
 esac
 
-output_file="$(input OUTPUT-FILE)"
 if [ -n "$output_file" ]; then
     add_flag_values "--output" "$output_file"
 fi
 
-if [ "$(input FAIL-ON-ERROR)" = "true" ]; then
+if [ "$fail_on_error" = "true" ]; then
     add_flag "--fail-on-error"
 fi
 
-concurrency="$(input CONCURRENCY)"
 if [ -z "$concurrency" ]; then
     concurrency="10"
 fi
@@ -138,11 +128,11 @@ case "$concurrency" in
 esac
 add_flag_values "--concurrency" "$concurrency"
 
-if [ "$(input RESULTS-ONLY)" = "true" ]; then
+if [ "$results_only" = "true" ]; then
     add_flag "--results-only"
 fi
 
-if [ "$(input QUIET)" = "true" ]; then
+if [ "$quiet" = "true" ]; then
     add_flag "--quiet"
 fi
 
