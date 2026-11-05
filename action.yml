@@ -1,0 +1,62 @@
+name: 'URL Detector'
+description: 'Scans source code and text files for URLs, detecting all discovered URLs using Tree-sitter parsers for accurate URL discovery across 20+ programming languages.'
+inputs:
+  version:
+    description: 'Version of @morgan-stanley/url-detector to install and run (semver or dist-tag)'
+    required: false
+    default: '0.1.0-beta.4'
+  scan-patterns:
+    description: 'Glob patterns for files to scan (space-separated, e.g. src/**/*)'
+    required: false
+    default: '**/*'
+  exclude-patterns:
+    description: 'Glob patterns for files to exclude (space-separated, e.g. node_modules/**)'
+    required: false
+    default: ''
+  scan-file:
+    description: 'File containing glob patterns to scan (one per line)'
+    required: false
+    default: ''
+  exclude-file:
+    description: 'File containing glob patterns to exclude (one per line)'
+    required: false
+    default: ''
+  ignore-domains:
+    description: 'List of domains to ignore (space-separated, supports wildcards, e.g. *.example.com)'
+    required: false
+    default: ''
+  include-comments:
+    description: 'Also scan commented-out lines for URLs'
+    required: false
+    default: false
+  include-non-fqdn:
+    description: 'Include non-fully qualified domain names like "localhost"'
+    required: false
+    default: false
+  format:
+    description: 'Output format: table, json, csv'
+    required: false
+    default: 'table'
+  output-file:
+    description: 'Output file path (defaults to stdout)'
+    required: false
+    default: ''
+  fail-on-error:
+    description: 'Exit with non-zero code if any URLs are found'
+    required: false
+    default: false
+  concurrency:
+    description: 'Maximum number of files to scan concurrently'
+    required: false
+    default: '10'
+  results-only:
+    description: 'Show only results, suppressing progress and info messages'
+    required: false
+    default: false
+  quiet:
+    description: 'Run in quiet mode with no console output'
+    required: false
+    default: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
