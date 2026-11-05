@@ -40,3 +40,8 @@ jobs:
         flags: unittests
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Pack the distributable tarball
+      run: npm pack
+    - name: Verify clean install + native detection (fresh consumer, this OS)
+      run: node scripts/verify-pack.mjs
