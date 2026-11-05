@@ -44,13 +44,23 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+// `npm` on Windows is a `.cmd` shim, which Node's no-shell spawn cannot execute
+// — `spawnSync('npm')` fails ENOENT on the GitHub runner even though `npm ci`
+// in the same job works (that goes through pwsh, not Node's process spawn).
+// Run the npm CLI entry that ships inside the Node distribution instead — the
+// same file `npm.cmd` delegates to — with this same node binary. One
+// deterministic path; no PATH / PATHEXT / `.cmd` resolution involved.
+const npmCli = path.join(path.dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+if (!fs.existsSync(npmCli)) {
+    process.stdout.write(`FAIL: npm CLI entry not found at ${npmCli} (expected inside the Node distribution)\n`);
+    process.exit(1);
+}
+
 /**
  * Runs a command, always returning { code, log } where log is stdout+stderr.
  * No shell is used, so arguments reach the child process verbatim (no quoting
- * or escaping surprises). `npm` resolves fine on every CI platform — on
- * Windows Node resolves it through PATHEXT and CreateProcess handles the
- * `.cmd` launcher — and the installed CLI is run directly with this same node
- * binary.
+ * or escaping surprises). The installed CLI is also run directly with this
+ * same node binary.
  */
 function run(cmd, args, cwd) {
     const res = spawnSync(cmd, args, { cwd, encoding: 'utf8', maxBuffer: 1024 * 1024 * 64 });
@@ -96,7 +106,11 @@ fs.writeFileSync(
 );
 
 process.stdout.write('\n(2) Installing the tarball into a fresh consumer directory...\n');
-const install = run('npm', ['install', tgzPath, '--no-audit', '--no-fund', '--loglevel=warn'], consumer);
+const install = run(
+    process.execPath,
+    [npmCli, 'install', tgzPath, '--no-audit', '--no-fund', '--loglevel=warn'],
+    consumer,
+);
 if (install.code !== 0) {
     fail(`npm install exited ${install.code}\n${install.log}`);
 }
