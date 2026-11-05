@@ -319,7 +319,7 @@ npm test
 npm run test:watch
 
 # Run with coverage
-npm test -- --coverage
+npm run test:coverage
 ```
 
 ## Development
@@ -379,24 +379,24 @@ npm run lint:fix
 
 ### Creating Self-Contained Executables
 
-The project supports creating standalone executables for distribution using [pkg](https://github.com/yao-pkg/pkg):
+The project supports creating standalone single-file executables for distribution using [Bun](https://bun.sh)'s `bun build --compile`:
 
 ```bash
 # Create executables for all platforms
-npm run pkg:all
+npm run build:exe:all
 
 # Create platform-specific executables
-npm run pkg:linux    # Creates url-detector-linux
-npm run pkg:macos    # Creates url-detector-macos  
-npm run pkg:win      # Creates url-detector-win.exe
+npm run build:exe:linux    # Creates url-detector-linux
+npm run build:exe:macos    # Creates url-detector-macos
+npm run build:exe:win      # Creates url-detector-win.exe
 ```
 
-The executables are optimized for size by only including platform-specific native dependencies. Each binary contains:
+Each binary is a self-contained executable that bundles:
 - The compiled TypeScript code
-- Node.js runtime
-- Only the Tree-sitter prebuilds for the target platform
+- The Bun runtime
+- Only the Tree-sitter native prebuilds for the target platform
 
-**Note**: You must run `npm run build` before creating executables to ensure the latest TypeScript changes are compiled.
+**Note**: You need [Bun](https://bun.sh) installed (`bun --version`). The build compiles directly from `src/`, so a separate `npm run build` step is not required.
 
 ## License
 

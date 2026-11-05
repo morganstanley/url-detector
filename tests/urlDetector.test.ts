@@ -15,14 +15,12 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { URLDetector } from '../src/urlDetector';
 
-// p-limit v4+ is ESM-only, but ts-jest compiles `await import()` to require()
-// in this CommonJS test environment, which cannot load it. Mock it with a
-// pass-through limiter (real concurrency behavior is covered by p-limit itself;
-// in a real Node runtime the dynamic import loads the actual package).
-jest.mock('p-limit', () => ({
-    __esModule: true,
+// p-limit v4+ is ESM-only. Mock it with a pass-through limiter so tests don't
+// depend on the real concurrency implementation (covered by p-limit's own tests).
+vi.mock('p-limit', () => ({
     default: () => (fn: () => Promise<unknown>) => Promise.resolve().then(fn),
 }));
 
@@ -340,6 +338,11 @@ describe('URLDetector', () => {
 
         beforeEach(async () => {
             tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-test-'));
+            // Canonicalize the temp dir to its real path. On macOS, os.tmpdir() returns a
+            // /var/folders/... path while process.cwd() (getcwd) returns the symlink-resolved
+            // /private/var/folders/... path; findFiles() resolves against process.cwd(), so
+            // comparing the two would differ unless we normalize to the real path here.
+            tmpDir = await fs.promises.realpath(tmpDir);
             await fs.promises.writeFile(
                 path.join(tmpDir, 'sample.js'),
                 'const apiUrl = "https://api.example.com/v1/users";\n',
@@ -510,7 +513,6 @@ const url2 = "https://example.com";`;
 
     describe('Control character stripping', () => {
         test('should truncate a URL match at an ESC-sequence payload', async () => {
-            // eslint-disable-next-line no-control-regex
             const code = `const url = "https://example.com/\x1b[31mfake\x1b[0m";`;
             const urls = await detector.detectURLs(code, 'javascript');
 
@@ -523,7 +525,6 @@ const url2 = "https://example.com";`;
         });
 
         test('should stop a fallback-regex match at a control byte', async () => {
-            // eslint-disable-next-line no-control-regex
             const code = `# Perl comment: http://example.com/path\x00../../etc/passwd`;
             const urls = await detector.detectURLs(code, 'perl');
 

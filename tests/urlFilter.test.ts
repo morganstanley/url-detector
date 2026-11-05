@@ -29,7 +29,11 @@ describe('URLFilter FQDN classification', () => {
         // numeric-only-TLD check actually applies.
         it('excludes numeric-only-TLD fragments that are not real IP addresses', () => {
             const filter = new URLFilter({});
-            const urls = [makeUrl('http://192.168.1.999/'), makeUrl('http://example.999/'), makeUrl('http://sub.domain.42/')];
+            const urls = [
+                makeUrl('http://192.168.1.999/'),
+                makeUrl('http://example.999/'),
+                makeUrl('http://sub.domain.42/'),
+            ];
 
             const filtered = filter.filterUrls(urls);
 

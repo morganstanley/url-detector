@@ -12,9 +12,12 @@
  * and limitations under the License.
  */
 
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { OutputFormatter } from '../src/outputFormatter';
 import { FileResult } from '../src/urlDetector';
-import { Logger } from '../src/logger';
+import { Logger, NullLogger } from '../src/logger';
 
 function makeResult(file: string, url: string): FileResult {
     return {
@@ -88,5 +91,93 @@ describe('OutputFormatter CSV escaping', () => {
 
             expect(dataRow).toContain('"a,""b"".js"');
         });
+    });
+});
+
+describe('OutputFormatter JSON output', () => {
+    test('emits a JSON document with a summary and per-file URLs', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'json', withLineNumbers: true }, logger);
+        await formatter.formatAndOutput([makeResult('src/app.js', 'https://example.com/a')]);
+        const parsed = JSON.parse(lines.join('\n'));
+
+        expect(parsed.summary.totalFiles).toBe(1);
+        expect(parsed.summary.totalUrls).toBe(1);
+        expect(parsed.summary.uniqueUrls).toBe(1);
+        expect(parsed.files[0].file).toBe('src/app.js');
+        expect(parsed.files[0].urlCount).toBe(1);
+        expect(parsed.files[0].urls[0].url).toBe('https://example.com/a');
+        expect(parsed.files[0].urls[0].line).toBe(1);
+    });
+
+    test('counts unique URLs separately from total URLs in the summary', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'json' }, logger);
+        await formatter.formatAndOutput([
+            makeResult('a.js', 'https://example.com'),
+            makeResult('b.js', 'https://example.com'),
+        ]);
+        const parsed = JSON.parse(lines.join('\n'));
+
+        expect(parsed.summary.totalUrls).toBe(2);
+        expect(parsed.summary.uniqueUrls).toBe(1);
+    });
+});
+
+describe('OutputFormatter table output', () => {
+    test('renders a table row per URL with line:col position', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'table' }, logger);
+        await formatter.formatAndOutput([makeResult('src/app.js', 'https://example.com/a')]);
+        const output = lines.join('\n');
+
+        expect(output).toContain('FilePath');
+        expect(output).toContain('1:1');
+        expect(output).toContain('https://example.com/a');
+    });
+
+    test('reports when there are no files or URLs', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'table' }, logger);
+        await formatter.formatAndOutput([]);
+
+        expect(lines.join('\n')).toContain('No URLs found.');
+    });
+
+    test('truncates overly long cell values', async () => {
+        const longUrl = `https://example.com/${'a'.repeat(60)}`;
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'table' }, logger);
+        await formatter.formatAndOutput([makeResult('src/very/long/path/file.js', longUrl)]);
+        const output = lines.join('\n');
+
+        expect(output).toContain('...');
+    });
+});
+
+describe('OutputFormatter URLs-only output', () => {
+    test('emits only the URL strings, one per line', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ onlyUrls: true }, logger);
+        await formatter.formatAndOutput([
+            makeResult('a.js', 'https://example.com/a'),
+            makeResult('b.js', 'https://example.com/b'),
+        ]);
+
+        expect(lines.join('\n')).toBe('https://example.com/a\nhttps://example.com/b');
+    });
+});
+
+describe('OutputFormatter file output', () => {
+    test('writes the formatted results to the output file', async () => {
+        const dir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'url-detector-fmt-'));
+        const outFile = path.join(dir, 'results.json');
+        const formatter = new OutputFormatter({ format: 'json', outputFile: outFile }, NullLogger);
+        await formatter.formatAndOutput([makeResult('a.js', 'https://example.com')]);
+
+        const content = await fs.promises.readFile(outFile, 'utf8');
+        await fs.promises.rm(dir, { recursive: true, force: true });
+
+        expect(content).toContain('example.com');
     });
 });

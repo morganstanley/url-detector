@@ -15,9 +15,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Table from 'cli-table3';
-import { Logger, NullLogger } from './logger';
-import { FileResult } from './urlDetector';
-import { OutputFormat } from './options';
+import { Logger, NullLogger } from './logger.js';
+import { FileResult } from './urlDetector.js';
+import { OutputFormat } from './options.js';
 
 /**
  * Configuration options for output formatting.

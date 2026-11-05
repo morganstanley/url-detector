@@ -16,11 +16,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import fg from 'fast-glob';
 import Parser from 'tree-sitter';
-import { LanguageManager } from './languageManager';
-import { DetectorOptions, DetectorOptionsConfig } from './options';
-import { URLFilter, URLMatch } from './urlFilter';
-import { sanitizeGlobPatterns } from './pathSanitizer';
-import { Logger, NullLogger } from './logger';
+import { LanguageManager } from './languageManager.js';
+import { DetectorOptions, DetectorOptionsConfig } from './options.js';
+import { URLFilter, URLMatch } from './urlFilter.js';
+import { sanitizeGlobPatterns } from './pathSanitizer.js';
+import { Logger, NullLogger } from './logger.js';
 
 /**
  * Result data for a single file scan
@@ -173,7 +173,7 @@ export class URLDetector {
      */
     public async detectURLs(sourceCode: string, language: string, filePath: string = '<unknown>'): Promise<URLMatch[]> {
         try {
-            const languageGrammar = this.languageManager.getLanguage(language);
+            const languageGrammar = await this.languageManager.getLanguage(language);
 
             if (!languageGrammar && !this.options.fallbackRegex) {
                 return [];
@@ -191,7 +191,10 @@ export class URLDetector {
             parser.setLanguage(languageGrammar as Parser.Language);
             const tree = parser.parse(sourceCode);
 
-            return this.extractURLsFromTree(tree, sourceCode, filePath);
+            // Await (not just return) so that any traversal error is caught by the
+            // surrounding try/catch and the regex fallback is honored; a bare `return`
+            // of the promise would let the rejection escape to the caller.
+            return await this.extractURLsFromTree(tree, sourceCode, filePath);
         } catch (error: any) {
             if (this.options.fallbackRegex) {
                 this.logger.warn(
@@ -205,18 +208,18 @@ export class URLDetector {
         }
     }
 
-    private extractURLsFromTree(tree: any, sourceCode: string, filePath: string): URLMatch[] {
+    private async extractURLsFromTree(tree: any, sourceCode: string, filePath: string): Promise<URLMatch[]> {
         const urls: URLMatch[] = [];
         const sourceLines = sourceCode.split('\n');
 
         // Use recursive node traversal instead of cursor to avoid API compatibility issues
-        const traverseNode = (node: any): void => {
+        const traverseNode = async (node: any): Promise<void> => {
             const text = sourceCode.slice(node.startIndex, node.endIndex);
 
             if (this.isStringNode(node)) {
                 // Special handling for raw_text nodes in script tags
                 if (node.type === 'raw_text' && this.isScriptContent(node)) {
-                    const scriptUrls = this.parseScriptContent(text, node.startIndex, sourceCode, sourceLines);
+                    const scriptUrls = await this.parseScriptContent(text, node.startIndex, sourceCode, sourceLines);
                     urls.push(...scriptUrls);
                 } else {
                     const foundUrls = this.extractURLsFromString(
@@ -237,11 +240,11 @@ export class URLDetector {
 
             // Traverse children
             for (let i = 0; i < node.childCount; i++) {
-                traverseNode(node.child(i));
+                await traverseNode(node.child(i));
             }
         };
 
-        traverseNode(tree.rootNode);
+        await traverseNode(tree.rootNode);
         return this.deduplicateByExactPosition(urls);
     }
 
@@ -328,15 +331,15 @@ export class URLDetector {
         return false;
     }
 
-    private parseScriptContent(
+    private async parseScriptContent(
         scriptText: string,
         startIndex: number,
         fullSourceCode: string,
         sourceLines: string[],
-    ): URLMatch[] {
+    ): Promise<URLMatch[]> {
         try {
             // Get JavaScript language grammar
-            const jsLanguage = this.languageManager.getLanguage('javascript');
+            const jsLanguage = await this.languageManager.getLanguage('javascript');
             if (!jsLanguage) {
                 // Fall back to regex if JavaScript parser not available
                 return this.extractURLsFromString(scriptText, startIndex, 'string', fullSourceCode, sourceLines);
@@ -350,8 +353,7 @@ export class URLDetector {
             const urls: URLMatch[] = [];
 
             // Traverse the JavaScript AST
-            const traverseJSNode = (node: any): void => {
-                const nodeType = node.type;
+            const traverseJSNode = async (node: any): Promise<void> => {
                 const text = scriptText.slice(node.startIndex, node.endIndex);
 
                 if (this.isStringNode(node)) {
@@ -378,11 +380,11 @@ export class URLDetector {
 
                 // Traverse children
                 for (let i = 0; i < node.childCount; i++) {
-                    traverseJSNode(node.child(i));
+                    await traverseJSNode(node.child(i));
                 }
             };
 
-            traverseJSNode(jsTree.rootNode);
+            await traverseJSNode(jsTree.rootNode);
             return urls;
         } catch (error: any) {
             // Fall back to regex if JavaScript parsing fails
@@ -507,7 +509,7 @@ export class URLDetector {
 
             return files.map(file => path.resolve(cwd, file));
         } catch (error: any) {
-            throw new Error(`Failed to find files: ${error.message}`);
+            throw new Error(`Failed to find files: ${error.message}`, { cause: error });
         }
     }
 
@@ -583,7 +585,7 @@ export class URLDetector {
             return [];
         }
 
-        // p-limit v4+ is ESM-only, so load it dynamically (works from this CommonJS build)
+        // p-limit v4+ is ESM-only; load it dynamically so it works in both ESM and CJS contexts
         const { default: pLimit } = await import('p-limit');
 
         // Create concurrency limiter
