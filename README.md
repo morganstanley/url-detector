@@ -131,7 +131,41 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--concurrency <number>` | Maximum number of files to scan concurrently | `10` |
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
+| `--config <path>` | Path to a configuration file (JSON). If omitted, discovered automatically as `.url-detector.json` or `.url-detectorrc` | `null` |
 | `--stdin-language <language>` | Language for stdin input (e.g., `javascript`). When set, reads content from stdin instead of scanning files | `null` |
+
+## Configuration file
+
+You can keep your settings in a configuration file instead of repeating them on the command line. The tool
+looks for a file named `.url-detector.json` or `.url-detectorrc`, starting in the current directory and walking
+up to the filesystem root, and uses the first one it finds. You can also point directly at a file with
+`--config <path>`.
+
+The configuration file is a JSON object whose keys are the same options used on the command line:
+
+```json
+{
+    "scan": ["**/*.{js,ts}"],
+    "exclude": ["node_modules", "dist"],
+    "ignoreDomains": ["example.com", "*.internal"],
+    "format": "json",
+    "failOnError": true,
+    "concurrency": 5
+}
+```
+
+Options can be set in three places, and they apply in this order of precedence (later wins):
+
+1. Built-in defaults
+2. The configuration file
+3. Command-line flags
+
+So a flag you pass on the command line always overrides the same key from the configuration file, and the
+configuration file overrides the built-in default. Keys the tool does not recognize are reported as a warning and
+ignored, which keeps configuration files forward-compatible. Values with the wrong type are an error, because
+silently accepting them would change what gets detected.
+
+For now the configuration file must be JSON. Support for other formats (such as YAML) is a possible follow-up.
 
 ## Supported Languages
 
