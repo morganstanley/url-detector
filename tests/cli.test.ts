@@ -15,7 +15,28 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { vi } from 'vitest';
 import { program } from '../src/cli';
+
+// The --stdin-language (stdin) path reads piped input via fs.readFileSync(0, 'utf8').
+// We cannot vi.spyOn() a Node builtin ESM namespace (it is non-configurable), so
+// partially mock 'fs' with a Proxy over the real module: everything (fs.promises,
+// etc.) stays real, and only readFileSync(fd === 0) returns controlled content.
+const stdinMock = vi.hoisted(() => ({ content: '' }));
+
+vi.mock('fs', async importOriginal => {
+    const original = (await importOriginal()) as typeof import('fs');
+    return new Proxy(original, {
+        get(target, prop, receiver) {
+            if (prop === 'readFileSync') {
+                return (fd: unknown) =>
+                    fd === 0 ? stdinMock.content : (target.readFileSync as (f: unknown) => string)(fd);
+            }
+            const value = Reflect.get(target, prop, receiver);
+            return typeof value === 'function' ? value.bind(target) : value;
+        },
+    });
+});
 
 // Drives the commander program defined in src/cli.ts. Importing the module runs
 // the top-level program setup (name/options/action registration) and the
@@ -102,5 +123,39 @@ describe('CLI', () => {
 
         // No output file was requested; nothing to assert on disk. Reaching here
         // without an exception means the action handler completed the no-URL path.
+    });
+
+    test('reads piped stdin with --stdin-language instead of scanning files', async () => {
+        // The beforeEach already created sample.js in cwd. In --stdin-language (stdin) mode we
+        // must NOT scan files; we only read from stdin. Feed piped content through the
+        // fs.readFileSync(0) mock and assert the result comes from it, not sample.js.
+        stdinMock.content = 'const url = "https://piped.example.com/endpoint";';
+
+        try {
+            const outFile = path.join(tmpDir, 'out.json');
+
+            await program.parseAsync([
+                'node',
+                'url-detector',
+                '--stdin-language',
+                'javascript',
+                '--format',
+                'json',
+                '--output',
+                outFile,
+                '--quiet',
+            ]);
+
+            const content = await fs.promises.readFile(outFile, 'utf8');
+            const parsed = JSON.parse(content);
+
+            expect(parsed.summary.totalFiles).toBe(1);
+            expect(parsed.summary.totalUrls).toBe(1);
+            expect(content).toContain('piped.example.com');
+            expect(content).not.toContain('api.example.com');
+            expect(content).toContain('<stdin>');
+        } finally {
+            stdinMock.content = '';
+        }
     });
 });
