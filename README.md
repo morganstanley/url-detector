@@ -131,6 +131,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--concurrency <number>` | Maximum number of files to scan concurrently | `10` |
 | `--scan-file <file>` | File containing glob patterns to scan (one per line) | `null` |
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
+| `--stdin-language <language>` | Language for stdin input (e.g., `javascript`). When set, reads content from stdin instead of scanning files | `null` |
 
 ## Supported Languages
 
@@ -168,6 +169,19 @@ url-detector --scan "**/*.{js,ts}" --format table
 
 # Scan source code only, exclude build artifacts
 url-detector --scan "src/**/*" --exclude "build/**" "dist/**" "**/node_modules"
+```
+
+### Scanning from stdin (piped content)
+
+Pass `--stdin-language` to read content from stdin instead of scanning files. This is handy for
+ad-hoc checks, pipelines, and scanning output like a git diff:
+
+```bash
+# Pipe content and specify its language
+echo 'const url = "https://example.com/api"' | url-detector --stdin-language javascript
+
+# Scan a git diff for URLs (unsupported languages fall back to regex detection)
+git diff | url-detector --stdin-language diff --format json
 ```
 
 ### Domain Filtering

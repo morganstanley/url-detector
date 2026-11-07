@@ -530,6 +530,38 @@ export class URLDetector {
         }
     }
 
+    /**
+     * Detects URLs in an in-memory block of text (e.g. content piped from stdin)
+     * and returns it as a single FileResult, so piped input flows through the same
+     * filtering and output pipeline as file-based scans.
+     *
+     * This is a convenience wrapper over detectURLs() that also applies the
+     * configured URL filter and packages the result under a synthetic file label.
+     *
+     * @param sourceCode The text content to scan for URLs
+     * @param language The language of the text, used to select the tree-sitter grammar.
+     *                 Unsupported languages fall back to regex detection.
+     * @param label Label for the synthetic "file" in the result (default: '<stdin>')
+     * @returns A single FileResult whose `urls` are the detected and filtered URLs
+     *
+     * @example
+     * ```typescript
+     * const text = 'const url = "https://example.com/api";';
+     * const result = await detector.detectFromText(text, 'javascript');
+     * console.log(result.file); // '<stdin>'
+     * console.log(result.urls.map(u => u.url)); // ['https://example.com/api']
+     * ```
+     */
+    public async detectFromText(sourceCode: string, language: string, label: string = '<stdin>'): Promise<FileResult> {
+        const urls = await this.detectURLs(sourceCode, language, label);
+        const filteredUrls = this.urlFilter.filterUrls(urls);
+
+        return {
+            file: label,
+            urls: filteredUrls,
+        };
+    }
+
     private getLineNumber(text: string, position: number): number {
         const beforePosition = text.substring(0, position);
         return beforePosition.split('\n').length;

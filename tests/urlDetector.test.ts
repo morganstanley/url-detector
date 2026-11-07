@@ -372,6 +372,53 @@ describe('URLDetector', () => {
         });
     });
 
+    describe('detectFromText()', () => {
+        test('detects URLs in piped JavaScript and labels the result <stdin>', async () => {
+            const text = 'const url = "https://example.com/api";';
+            const result = await detector.detectFromText(text, 'javascript');
+
+            expect(result.file).toBe('<stdin>');
+            expect(result.urls).toHaveLength(1);
+            expect(result.urls[0].url).toBe('https://example.com/api');
+        });
+
+        test('honors a custom label', async () => {
+            const text = 'const url = "https://example.com/api";';
+            const result = await detector.detectFromText(text, 'javascript', 'piped-input');
+
+            expect(result.file).toBe('piped-input');
+            expect(result.urls.map(u => u.url)).toContain('https://example.com/api');
+        });
+
+        test('applies the configured URL filter (ignoreDomains)', async () => {
+            // Domain filtering matches on the hostname (not the path), so use two distinct
+            // domains: the ignored one is dropped, the other is kept.
+            const text = 'const a = "https://keep.example.com/x"; const b = "https://drop.example.com/y";';
+            const filtered = new URLDetector({ ignoreDomains: ['drop.example.com'] });
+            const result = await filtered.detectFromText(text, 'javascript');
+
+            const resultUrls = result.urls.map(u => u.url);
+            expect(resultUrls).toContain('https://keep.example.com/x');
+            expect(resultUrls).not.toContain('https://drop.example.com/y');
+        });
+
+        test('falls back to regex detection for an unsupported language', async () => {
+            // 'diff' is not a configured tree-sitter grammar, so detection should fall back to
+            // regex and still surface the URL (mirrors `git diff | url-detector --stdin-language diff`).
+            const text = 'diff --git a/app.js b/app.js\n+const url = "https://example.com/added";\n';
+            const result = await detector.detectFromText(text, 'diff');
+
+            expect(result.file).toBe('<stdin>');
+            expect(result.urls.map(u => u.url)).toContain('https://example.com/added');
+        });
+
+        test('returns an empty URL list for text with no URLs', async () => {
+            const result = await detector.detectFromText('const x = 1;\n', 'javascript');
+            expect(result.file).toBe('<stdin>');
+            expect(result.urls).toHaveLength(0);
+        });
+    });
+
     describe('Edge cases', () => {
         test('should handle empty input', async () => {
             const urls = await detector.detectURLs('', 'javascript');

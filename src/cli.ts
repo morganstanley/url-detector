@@ -42,6 +42,10 @@ program
     .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt, 10)
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
+    .option(
+        '--stdin-language <language>',
+        'Language for stdin input (e.g., javascript). When set, reads content from stdin instead of scanning files',
+    )
     .action(async options => {
         // Create appropriate logger based on CLI options
         let logger;
@@ -54,19 +58,28 @@ program
         }
 
         try {
+            // --stdin-language switches the tool into stdin mode: it reads content from
+            // stdin and detects URLs using the given language, instead of scanning files.
+            const stdinMode = Boolean(options.stdinLanguage);
+
             // Create mutable copy of options for processing
-            let scanPatterns = (options.scan as string[]) || [];
-            let excludePatterns = (options.exclude as string[]) || [];
+            let scanPatterns: string[] = [];
+            let excludePatterns: string[] = [];
 
-            // Load patterns from files if specified
-            if (options.scanFile) {
-                const fileScanPatterns = await loadPatternsFromFile(options.scanFile as string);
-                scanPatterns = [...scanPatterns, ...fileScanPatterns];
-            }
+            if (!stdinMode) {
+                scanPatterns = (options.scan as string[]) || [];
+                excludePatterns = (options.exclude as string[]) || [];
 
-            if (options.excludeFile) {
-                const fileExcludePatterns = await loadPatternsFromFile(options.excludeFile as string);
-                excludePatterns = [...excludePatterns, ...fileExcludePatterns];
+                // Load patterns from files if specified
+                if (options.scanFile) {
+                    const fileScanPatterns = await loadPatternsFromFile(options.scanFile as string);
+                    scanPatterns = [...scanPatterns, ...fileScanPatterns];
+                }
+
+                if (options.excludeFile) {
+                    const fileExcludePatterns = await loadPatternsFromFile(options.excludeFile as string);
+                    excludePatterns = [...excludePatterns, ...fileExcludePatterns];
+                }
             }
 
             // Create detector with options and logger
@@ -86,8 +99,10 @@ program
                 logger,
             );
 
-            // Process results
-            const results = await detector.process();
+            // Process results: detect from piped stdin, or scan files matching the patterns
+            const results = stdinMode
+                ? [await detector.detectFromText(fs.readFileSync(0, 'utf8'), options.stdinLanguage as string)]
+                : await detector.process();
 
             // Calculate summary
             const totalFiles = results.length;
