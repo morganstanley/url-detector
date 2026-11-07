@@ -101,6 +101,10 @@ describe('validateConfig', () => {
         expect(() => validateConfig({ format: 'xml' })).toThrow(/format/);
     });
 
+    test('throws when format is not a string', () => {
+        expect(() => validateConfig({ format: 123 })).toThrow(/format/);
+    });
+
     test('throws when concurrency is not a positive integer', () => {
         expect(() => validateConfig({ concurrency: 0 })).toThrow(/concurrency/);
         expect(() => validateConfig({ concurrency: 2.5 })).toThrow(/concurrency/);
