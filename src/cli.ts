@@ -18,7 +18,8 @@ import { Command } from 'commander';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
 import { URLDetector } from './urlDetector.js';
-import { OutputFormat } from './options.js';
+import { OutputFormat, DetectorOptionsConfig } from './options.js';
+import { loadConfig } from './configLoader.js';
 import { ConsoleLogger, NullLogger, ResultsOnlyLogger } from './logger.js';
 import { OutputFormatter } from './outputFormatter.js';
 import packageJson from '../package.json' with { type: 'json' };
@@ -29,17 +30,22 @@ program
     .name('url-detector')
     .description('Scan source code and text files for URLs, detecting all discovered URLs')
     .version(packageJson.version)
-    .option('-s, --scan <patterns...>', 'Glob patterns for files to scan', ['**/*'])
-    .option('-e, --exclude <patterns...>', 'Glob patterns for files to exclude', [])
-    .option('-i, --ignore-domains <domains...>', 'List of domains to ignore (e.g., example.com)', [])
-    .option('--include-comments', 'Also scan commented-out lines for URLs', false)
-    .option('--include-non-fqdn', 'Include non-fully qualified domain names like "localhost"', false)
-    .option('-f, --format <format>', 'Output format: table, json, csv', 'table')
+    // Note: the options below deliberately have no baked-in defaults. A value left
+    // unset here is `undefined`, which lets the action handler tell "the user passed
+    // this flag" apart from "it was left to the configuration file / built-in
+    // defaults". The real defaults are applied later by DetectorOptions.
+    .option('-s, --scan <patterns...>', 'Glob patterns for files to scan')
+    .option('-e, --exclude <patterns...>', 'Glob patterns for files to exclude')
+    .option('-i, --ignore-domains <domains...>', 'List of domains to ignore (e.g., example.com)')
+    .option('--include-comments', 'Also scan commented-out lines for URLs')
+    .option('--include-non-fqdn', 'Include non-fully qualified domain names like "localhost"')
+    .option('-f, --format <format>', 'Output format: table, json, csv')
     .option('-o, --output <file>', 'Output file path (defaults to stdout)')
     .option('-q, --quiet', 'Run in quiet mode with no console output', false)
-    .option('--results-only', 'Show only results, suppressing progress and info messages', false)
-    .option('--fail-on-error', 'Exit with non-zero code if any URLs are found', false)
-    .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt, 10)
+    .option('--results-only', 'Show only results, suppressing progress and info messages')
+    .option('--fail-on-error', 'Exit with non-zero code if any URLs are found')
+    .option('--concurrency <number>', 'Maximum number of files to scan concurrently', parseInt)
+    .option('--config <path>', 'Path to a configuration file (JSON). Discovered automatically if omitted')
     .option('--scan-file <file>', 'File containing glob patterns to scan (one per line)')
     .option('--exclude-file <file>', 'File containing glob patterns to exclude (one per line)')
     .option(
@@ -47,57 +53,89 @@ program
         'Language for stdin input (e.g., javascript). When set, reads content from stdin instead of scanning files',
     )
     .action(async options => {
-        // Create appropriate logger based on CLI options
-        let logger;
-        if (options.quiet) {
-            logger = NullLogger;
-        } else if (options.resultsOnly) {
-            logger = ResultsOnlyLogger;
-        } else {
-            logger = ConsoleLogger;
+        // Load the configuration file first. It provides the base options; any command-line
+        // flag the user explicitly provides overrides it, and DetectorOptions supplies the
+        // remaining built-in defaults. A bad configuration file fails fast, before a logger
+        // is chosen, since a config error should be reported regardless of verbosity.
+        let config: DetectorOptionsConfig = {};
+        let configSource: string | null = null;
+        let configWarnings: string[] = [];
+        try {
+            const loaded = await loadConfig(options.config as string | undefined);
+            if (loaded) {
+                config = loaded.config;
+                configSource = loaded.sourcePath;
+                configWarnings = loaded.warnings;
+            }
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            ConsoleLogger.error(`Configuration error: ${message}`);
+            process.exit(1);
         }
+
+        // Pick the logger from the effective results-only setting, which can come from
+        // either the command line or the configuration file (command line wins). Quiet is
+        // the strongest and always wins.
+        const effectiveResultsOnly = options.resultsOnly ?? config.resultsOnly ?? false;
+        const logger = options.quiet ? NullLogger : effectiveResultsOnly ? ResultsOnlyLogger : ConsoleLogger;
 
         try {
             // --stdin-language switches the tool into stdin mode: it reads content from
             // stdin and detects URLs using the given language, instead of scanning files.
             const stdinMode = Boolean(options.stdinLanguage);
 
-            // Create mutable copy of options for processing
-            let scanPatterns: string[] = [];
-            let excludePatterns: string[] = [];
+            // Build the effective options: configuration file values as the base, overridden
+            // by the command-line flags the user explicitly provided. An option left unset
+            // here (undefined) is simply not copied, so the configuration value or the
+            // built-in default applies instead.
+            const cliOverrides: DetectorOptionsConfig = {};
+            if (options.scan !== undefined) cliOverrides.scan = options.scan as string[];
+            if (options.exclude !== undefined) cliOverrides.exclude = options.exclude as string[];
+            if (options.ignoreDomains !== undefined) {
+                cliOverrides.ignoreDomains = options.ignoreDomains as string[];
+            }
+            if (options.includeComments !== undefined) {
+                cliOverrides.includeComments = options.includeComments as boolean;
+            }
+            if (options.includeNonFqdn !== undefined) {
+                cliOverrides.includeNonFqdn = options.includeNonFqdn as boolean;
+            }
+            if (options.format !== undefined) cliOverrides.format = options.format as OutputFormat;
+            if (options.output !== undefined) cliOverrides.output = options.output as string;
+            if (options.resultsOnly !== undefined) {
+                cliOverrides.resultsOnly = options.resultsOnly as boolean;
+            }
+            if (options.failOnError !== undefined) {
+                cliOverrides.failOnError = options.failOnError as boolean;
+            }
+            if (options.concurrency !== undefined) {
+                cliOverrides.concurrency = options.concurrency as number;
+            }
 
+            // Pattern files append to the effective scan/exclude patterns. Only relevant
+            // when scanning files; in stdin mode they are intentionally not read.
             if (!stdinMode) {
-                scanPatterns = (options.scan as string[]) || [];
-                excludePatterns = (options.exclude as string[]) || [];
-
-                // Load patterns from files if specified
                 if (options.scanFile) {
                     const fileScanPatterns = await loadPatternsFromFile(options.scanFile as string);
-                    scanPatterns = [...scanPatterns, ...fileScanPatterns];
+                    cliOverrides.scan = [...(cliOverrides.scan || []), ...fileScanPatterns];
                 }
-
                 if (options.excludeFile) {
                     const fileExcludePatterns = await loadPatternsFromFile(options.excludeFile as string);
-                    excludePatterns = [...excludePatterns, ...fileExcludePatterns];
+                    cliOverrides.exclude = [...(cliOverrides.exclude || []), ...fileExcludePatterns];
+                }
+            }
+
+            const effectiveOptions: DetectorOptionsConfig = { ...config, ...cliOverrides };
+
+            if (configSource) {
+                logger.info(`Using configuration file: ${configSource}`);
+                for (const warning of configWarnings) {
+                    logger.warn(warning);
                 }
             }
 
             // Create detector with options and logger
-            const detector = new URLDetector(
-                {
-                    scan: scanPatterns,
-                    exclude: excludePatterns,
-                    ignoreDomains: options.ignoreDomains as string[],
-                    includeComments: options.includeComments as boolean,
-                    includeNonFqdn: options.includeNonFqdn as boolean,
-                    format: options.format as OutputFormat,
-                    output: options.output as string,
-                    resultsOnly: options.resultsOnly as boolean,
-                    failOnError: options.failOnError as boolean,
-                    concurrency: options.concurrency as number,
-                },
-                logger,
-            );
+            const detector = new URLDetector(effectiveOptions, logger);
 
             // Process results: detect from piped stdin, or scan files matching the patterns
             const results = stdinMode
@@ -110,11 +148,13 @@ program
 
             // Handle output formatting - format results if we found URLs or if explicitly requested
             if (totalUrls > 0) {
+                const effectiveFormat = options.format ?? config.format ?? ('table' as OutputFormat);
+                const effectiveOutput = options.output ?? config.output ?? null;
+
                 const outputFormatter = new OutputFormatter(
                     {
-                        format: (options.format as OutputFormat) || 'table',
-                        outputFile: (options.output as string) || null,
-
+                        format: effectiveFormat,
+                        outputFile: effectiveOutput,
                         withLineNumbers: true,
                         withFilenames: true,
                         context: 0,
@@ -129,7 +169,8 @@ program
             logger.info(`Processed ${totalFiles} file(s), found ${totalUrls} URL(s)`);
 
             // Exit with error code if URLs found and fail-on-error is set
-            if (options.failOnError && totalUrls > 0) {
+            const effectiveFailOnError = options.failOnError ?? config.failOnError ?? false;
+            if (effectiveFailOnError && totalUrls > 0) {
                 process.exit(1);
             }
         } catch (error: unknown) {

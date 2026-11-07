@@ -31,6 +31,7 @@ fail_on_error="${11-}"
 concurrency="${12-}"
 results_only="${13-}"
 quiet="${14-}"
+config="${15-}"
 
 # --- version -----------------------------------------------------------
 # Fallback mirrors the default declared in action.yml.
@@ -67,10 +68,11 @@ add_flag_values() {
     args="$args $1 $2"
 }
 
-if [ -z "$scan_patterns" ]; then
-    scan_patterns="**/*"
+# Only forwarded when the caller actually set it; otherwise the CLI's own
+# default (or a discovered configuration file) applies.
+if [ -n "$scan_patterns" ]; then
+    add_flag_values "--scan" "$scan_patterns"
 fi
-add_flag_values "--scan" "$scan_patterns"
 
 if [ -n "$exclude_patterns" ]; then
     add_flag_values "--exclude" "$exclude_patterns"
@@ -96,18 +98,19 @@ if [ "$include_non_fqdn" = "true" ]; then
     add_flag "--include-non-fqdn"
 fi
 
-if [ -z "$format" ]; then
-    format="table"
+# Only forwarded when the caller actually set it; otherwise the CLI's own
+# default (or a discovered configuration file) applies.
+if [ -n "$format" ]; then
+    case "$format" in
+        table|json|csv)
+            add_flag_values "--format" "$format"
+            ;;
+        *)
+            echo "error: invalid format '$format' (expected table, json, or csv)" >&2
+            exit 2
+            ;;
+    esac
 fi
-case "$format" in
-    table|json|csv)
-        add_flag_values "--format" "$format"
-        ;;
-    *)
-        echo "error: invalid format '$format' (expected table, json, or csv)" >&2
-        exit 2
-        ;;
-esac
 
 if [ -n "$output_file" ]; then
     add_flag_values "--output" "$output_file"
@@ -117,16 +120,17 @@ if [ "$fail_on_error" = "true" ]; then
     add_flag "--fail-on-error"
 fi
 
-if [ -z "$concurrency" ]; then
-    concurrency="10"
+# Only forwarded when the caller actually set it; otherwise the CLI's own
+# default (or a discovered configuration file) applies.
+if [ -n "$concurrency" ]; then
+    case "$concurrency" in
+        ''|*[!0-9]*)
+            echo "error: concurrency '$concurrency' must be a positive integer" >&2
+            exit 2
+            ;;
+    esac
+    add_flag_values "--concurrency" "$concurrency"
 fi
-case "$concurrency" in
-    ''|*[!0-9]*)
-        echo "error: concurrency '$concurrency' must be a positive integer" >&2
-        exit 2
-        ;;
-esac
-add_flag_values "--concurrency" "$concurrency"
 
 if [ "$results_only" = "true" ]; then
     add_flag "--results-only"
@@ -134,6 +138,10 @@ fi
 
 if [ "$quiet" = "true" ]; then
     add_flag "--quiet"
+fi
+
+if [ -n "$config" ]; then
+    add_flag_values "--config" "$config"
 fi
 
 # Unquoted $args on purpose: each space-separated value (glob patterns,

@@ -6,9 +6,9 @@ inputs:
     required: false
     default: '0.1.0-beta.4'
   scan-patterns:
-    description: 'Glob patterns for files to scan (space-separated, e.g. src/**/*)'
+    description: 'Glob patterns for files to scan (space-separated, e.g. src/**/*). Leave empty to use the tool default or a configuration file'
     required: false
-    default: '**/*'
+    default: ''
   exclude-patterns:
     description: 'Glob patterns for files to exclude (space-separated, e.g. node_modules/**)'
     required: false
@@ -34,9 +34,9 @@ inputs:
     required: false
     default: false
   format:
-    description: 'Output format: table, json, csv'
+    description: 'Output format: table, json, csv. Leave empty to use the tool default or a configuration file'
     required: false
-    default: 'table'
+    default: ''
   output-file:
     description: 'Output file path (defaults to stdout)'
     required: false
@@ -46,9 +46,9 @@ inputs:
     required: false
     default: false
   concurrency:
-    description: 'Maximum number of files to scan concurrently'
+    description: 'Maximum number of files to scan concurrently. Leave empty to use the tool default or a configuration file'
     required: false
-    default: '10'
+    default: ''
   results-only:
     description: 'Show only results, suppressing progress and info messages'
     required: false
@@ -57,6 +57,10 @@ inputs:
     description: 'Run in quiet mode with no console output'
     required: false
     default: false
+  config:
+    description: 'Path to a configuration file (JSON). If omitted, discovered automatically as .url-detector.json or .url-detectorrc'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -77,3 +81,4 @@ runs:
     - ${{ inputs.concurrency }}
     - ${{ inputs.results-only }}
     - ${{ inputs.quiet }}
+    - ${{ inputs.config }}

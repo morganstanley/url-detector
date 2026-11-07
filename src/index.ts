@@ -18,6 +18,8 @@ export { LanguageManager, LanguageConfig } from './languageManager.js';
 export { URLFilter } from './urlFilter.js';
 export { OutputFormatter } from './outputFormatter.js';
 export { Logger, NullLogger, ConsoleLogger, ResultsOnlyLogger } from './logger.js';
+export { loadConfig, resolveConfigPath, validateConfig, CONFIG_FILE_NAMES } from './configLoader.js';
+export type { ConfigLoadResult } from './configLoader.js';
 
 import * as fs from 'fs';
 import { URLDetector } from './urlDetector.js';

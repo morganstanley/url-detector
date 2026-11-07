@@ -158,4 +158,67 @@ describe('CLI', () => {
             stdinMock.content = '';
         }
     });
+
+    test('applies the output format from a discovered configuration file', async () => {
+        // A config file in the working directory sets the format. The CLI does not pass
+        // --format, so the configuration value is what takes effect (CSV here).
+        await fs.promises.writeFile(path.join(tmpDir, '.url-detector.json'), JSON.stringify({ format: 'csv' }));
+        const outFile = path.join(tmpDir, 'out.csv');
+
+        await program.parseAsync(['node', 'url-detector', '--scan', 'sample.js', '--output', outFile, '--quiet']);
+
+        const content = await fs.promises.readFile(outFile, 'utf8');
+        expect(content).toContain('ColumnPosition'); // CSV header proves the format came from the config file
+        expect(content).not.toContain('"summary"');
+        expect(content).toContain('api.example.com');
+    });
+
+    test('lets a command-line flag override the configuration file', async () => {
+        // The config file asks for CSV, but the CLI explicitly requests JSON. The CLI wins.
+        await fs.promises.writeFile(path.join(tmpDir, '.url-detector.json'), JSON.stringify({ format: 'csv' }));
+        const outFile = path.join(tmpDir, 'out.json');
+
+        await program.parseAsync([
+            'node',
+            'url-detector',
+            '--scan',
+            'sample.js',
+            '--format',
+            'json',
+            '--output',
+            outFile,
+            '--quiet',
+        ]);
+
+        const content = await fs.promises.readFile(outFile, 'utf8');
+        expect(content).toContain('"summary"'); // JSON proves --format overrode the config value
+        expect(content).not.toContain('ColumnPosition');
+        expect(content).toContain('api.example.com');
+    });
+
+    test('loads a configuration file from an explicit --config path', async () => {
+        // A file discovery would ignore (it is not .url-detector.json / .url-detectorrc),
+        // referenced only via --config. The CLI omits --format, so a CSV result proves the
+        // explicit file was loaded rather than the default format being used.
+        const configPath = path.join(tmpDir, 'my-config.json');
+        await fs.promises.writeFile(configPath, JSON.stringify({ format: 'csv' }));
+        const outFile = path.join(tmpDir, 'out.csv');
+
+        await program.parseAsync([
+            'node',
+            'url-detector',
+            '--scan',
+            'sample.js',
+            '--config',
+            configPath,
+            '--output',
+            outFile,
+            '--quiet',
+        ]);
+
+        const content = await fs.promises.readFile(outFile, 'utf8');
+        expect(content).toContain('ColumnPosition');
+        expect(content).not.toContain('"summary"');
+        expect(content).toContain('api.example.com');
+    });
 });
