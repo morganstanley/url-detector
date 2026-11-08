@@ -14,10 +14,12 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { createHash, randomUUID } from 'node:crypto';
 import Table from 'cli-table3';
 import { Logger, NullLogger } from './logger.js';
 import { FileResult } from './urlDetector.js';
 import { OutputFormat } from './options.js';
+import packageJson from '../package.json' with { type: 'json' };
 
 /**
  * Configuration options for output formatting.
@@ -60,6 +62,18 @@ export interface JsonOutput {
     }>;
 }
 
+/**
+ * A single place a URL was found, recorded in a CycloneDX component's
+ * properties. Kept minimal: enough to locate the URL again, nothing that
+ * a URL-only manifest cannot supply.
+ */
+interface UrlLocation {
+    file: string;
+    line: number;
+    column: number;
+    sourceType: 'string' | 'comment' | 'unknown';
+}
+
 export class OutputFormatter {
     private options: OutputFormatterOptions;
     private logger: Logger;
@@ -85,6 +99,9 @@ export class OutputFormatter {
                     break;
                 case 'table':
                     output = this.formatTable(results);
+                    break;
+                case 'cyclonedx':
+                    output = this.formatCycloneDX(results);
                     break;
 
                 default:
@@ -193,6 +210,77 @@ export class OutputFormatter {
         }
 
         return table.toString();
+    }
+
+    /**
+     * Builds a CycloneDX 1.5 BOM (bill of materials) from the detection results.
+     *
+     * Each unique URL becomes a single component: a dependency identified only by
+     * its URL, since a URL alone carries no version or license to record. Every
+     * place the URL was found in the scanned files is kept in the component's
+     * properties so the origin can be traced. The result is a valid "URL-only
+     * manifest" that CycloneDX tooling can import and reconcile against a full
+     * SBOM where versions and licenses are known.
+     */
+    private formatCycloneDX(results: FileResult[]): string {
+        const locationsByUri = new Map<string, UrlLocation[]>();
+        for (const result of results) {
+            for (const urlObj of result.urls) {
+                const locations = locationsByUri.get(urlObj.url) || [];
+                locations.push({
+                    file: result.file,
+                    line: urlObj.line,
+                    column: urlObj.column,
+                    sourceType: urlObj.sourceType,
+                });
+                locationsByUri.set(urlObj.url, locations);
+            }
+        }
+
+        const components = Array.from(locationsByUri.entries()).map(([url, locations]) => ({
+            type: 'library',
+            'bom-ref': `url-${this.sha256Hex(url).slice(0, 16)}`,
+            name: url,
+            externalReferences: [
+                {
+                    type: 'distribution',
+                    url,
+                },
+            ],
+            properties: [
+                {
+                    name: 'url-detector:locations',
+                    value: JSON.stringify(locations),
+                },
+            ],
+        }));
+
+        const bom = {
+            bomFormat: 'CycloneDX',
+            specVersion: '1.5',
+            serialNumber: `urn:uuid:${randomUUID()}`,
+            version: 1,
+            metadata: {
+                timestamp: new Date().toISOString(),
+                tools: {
+                    components: [
+                        {
+                            type: 'application',
+                            name: 'url-detector',
+                            version: packageJson.version,
+                            description: 'SBOM generator for URLs detected in source code',
+                        },
+                    ],
+                },
+            },
+            components,
+        };
+
+        return JSON.stringify(bom, null, 2);
+    }
+
+    private sha256Hex(value: string): string {
+        return createHash('sha256').update(value, 'utf8').digest('hex');
     }
 
     private getUniqueUrls(results: FileResult[]): string[] {

@@ -124,6 +124,55 @@ describe('OutputFormatter JSON output', () => {
     });
 });
 
+describe('OutputFormatter CycloneDX output', () => {
+    test('emits a CycloneDX 1.5 BOM with one component per unique URL', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'cyclonedx' }, logger);
+        await formatter.formatAndOutput([makeResult('src/app.js', 'https://example.com/a')]);
+        const parsed = JSON.parse(lines.join('\n'));
+
+        expect(parsed.bomFormat).toBe('CycloneDX');
+        expect(parsed.specVersion).toBe('1.5');
+        expect(parsed.serialNumber).toMatch(/^urn:uuid:/);
+        expect(parsed.version).toBe(1);
+        expect(parsed.metadata.timestamp).toBeTruthy();
+        expect(parsed.components).toHaveLength(1);
+        expect(parsed.components[0].type).toBe('library');
+        expect(parsed.components[0].name).toBe('https://example.com/a');
+        expect(parsed.components[0].externalReferences[0].type).toBe('distribution');
+        expect(parsed.components[0].externalReferences[0].url).toBe('https://example.com/a');
+    });
+
+    test('deduplicates repeated URLs into one component and records every location', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'cyclonedx' }, logger);
+        await formatter.formatAndOutput([
+            makeResult('a.js', 'https://example.com'),
+            makeResult('b.js', 'https://example.com'),
+            makeResult('c.js', 'https://example.org'),
+        ]);
+        const parsed = JSON.parse(lines.join('\n'));
+
+        expect(parsed.components).toHaveLength(2);
+        const component = parsed.components.find(c => c.name === 'https://example.com');
+        const locations = JSON.parse(component.properties.find(p => p.name === 'url-detector:locations').value);
+        expect(locations).toHaveLength(2);
+        expect(locations.map(l => l.file).sort()).toEqual(['a.js', 'b.js']);
+    });
+
+    test('records the generating tool name and version in metadata', async () => {
+        const { logger, lines } = captureLogger();
+        const formatter = new OutputFormatter({ format: 'cyclonedx' }, logger);
+        await formatter.formatAndOutput([makeResult('a.js', 'https://example.com')]);
+        const parsed = JSON.parse(lines.join('\n'));
+
+        const tool = parsed.metadata.tools.components[0];
+        expect(tool.name).toBe('url-detector');
+        expect(tool.version).toBeTruthy();
+        expect(tool.type).toBe('application');
+    });
+});
+
 describe('OutputFormatter table output', () => {
     test('renders a table row per URL with line:col position', async () => {
         const { logger, lines } = captureLogger();

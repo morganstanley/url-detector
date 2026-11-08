@@ -39,7 +39,7 @@ export interface ConfigLoadResult {
  * programmatic {@link DetectorOptionsConfig} surface. Values here are treated as
  * defaults that command-line flags override.
  */
-const VALID_FORMATS: OutputFormat[] = ['table', 'json', 'csv'];
+const VALID_FORMATS: OutputFormat[] = ['table', 'json', 'csv', 'cyclonedx'];
 
 /**
  * Resolves the path of the configuration file to use.

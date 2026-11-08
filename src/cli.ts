@@ -39,7 +39,7 @@ program
     .option('-i, --ignore-domains <domains...>', 'List of domains to ignore (e.g., example.com)')
     .option('--include-comments', 'Also scan commented-out lines for URLs')
     .option('--include-non-fqdn', 'Include non-fully qualified domain names like "localhost"')
-    .option('-f, --format <format>', 'Output format: table, json, csv')
+    .option('-f, --format <format>', 'Output format: table, json, csv, cyclonedx')
     .option('-o, --output <file>', 'Output file path (defaults to stdout)')
     .option('-q, --quiet', 'Run in quiet mode with no console output', false)
     .option('--results-only', 'Show only results, suppressing progress and info messages')
