@@ -133,6 +133,7 @@ const customLanguageManager = new LanguageManager(undefined, [
 | `--exclude-file <file>` | File containing glob patterns to exclude (one per line) | `null` |
 | `--config <path>` | Path to a configuration file (JSON). If omitted, discovered automatically as `.url-detector.json` or `.url-detectorrc` | `null` |
 | `--stdin-language <language>` | Language for stdin input (e.g., `javascript`). When set, reads content from stdin instead of scanning files | `null` |
+| `--ignore-domains-file <file>` | File containing domain patterns to ignore (one per line; `#` starts a comment, either on its own line or after the pattern) | `null` |
 
 ## Configuration file
 
@@ -228,6 +229,9 @@ url-detector --ignore-domains "*.example.com"
 
 # Ignore multiple domain patterns
 url-detector --ignore-domains "*.example.com" "localhost" "*.local"
+
+# Ignore domains listed in a file (one pattern per line; # comments are skipped)
+url-detector --ignore-domains-file ignored-domains.txt
 ```
 
 ### Output Formats
